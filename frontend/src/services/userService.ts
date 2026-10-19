@@ -65,6 +65,12 @@ export const userService = {
     return mapUser(await api.post<ApiCampusUser>('/api/users/me/', form));
   },
 
+  async getFollowList(username: string, relation: 'followers' | 'following'): Promise<CampusProfile[]> {
+    const data = await api.get<UserListResponse>(`/api/users/${encodeURIComponent(username)}/${relation}/`);
+    if (!Array.isArray(data?.results)) throw apiError('invalid_response');
+    return data.results.map(mapUser);
+  },
+
   async toggleFollow(username: string): Promise<{ following: boolean; followersCount: number }> {
     const result = await api.post<{ following: boolean; followers_count: number }>(`/api/users/${encodeURIComponent(username)}/follow/`);
     if (typeof result?.following !== 'boolean' || typeof result.followers_count !== 'number') throw apiError('invalid_response');
