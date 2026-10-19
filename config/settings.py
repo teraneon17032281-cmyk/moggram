@@ -146,7 +146,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(env("MEDIA_ROOT", str(BASE_DIR / "media")))
 
 # Папка со сборкой фронтенда (npm run build). Если она есть, Django отдаёт SPA сам.
 FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
