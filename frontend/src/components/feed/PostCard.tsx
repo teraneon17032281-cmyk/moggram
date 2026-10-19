@@ -436,9 +436,7 @@ export default function PostCard({
               {reposts}
             </button>
 
-            __REPOST_BUTTON__
 
-            __LIKE_BUTTON__
           </div>
         </div>
 
