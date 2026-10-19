@@ -4,7 +4,6 @@ from users.models import Faculty
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 
-
 class Subject(models.Model):
     """Учебная дисциплина (предмет)"""
     name = models.CharField(max_length=150, unique=True, verbose_name="Название предмета")
@@ -18,7 +17,6 @@ class Subject(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.code})"
-
 
 class Teacher(models.Model):
     """Профиль преподавателя"""
@@ -37,7 +35,6 @@ class Teacher(models.Model):
 
     def __str__(self):
         return f"Преп. {self.user.get_full_name() or self.user.username} ({self.department})"
-
 
 class Schedule(models.Model):
     """Расписание занятий"""

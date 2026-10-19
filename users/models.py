@@ -89,6 +89,28 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False, verbose_name="Верифицирован")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
 
+    # --- поля для React-фронтенда ---
+    email_verified = models.BooleanField(
+        default=False,
+        verbose_name="Почта подтверждена",
+        help_text="Входить в приложение можно только после подтверждения почты кодом.",
+    )
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True, verbose_name="Аватар (файл)")
+    last_seen_at = models.DateTimeField(null=True, blank=True, verbose_name="Последняя активность")
+
+    # Настройки (POST /api/auth/preferences/)
+    theme = models.CharField(max_length=10, choices=[("dark", "Тёмная"), ("light", "Светлая")],
+                             default="dark", verbose_name="Тема")
+    language = models.CharField(max_length=5, choices=[("ru", "Русский"), ("en", "English")],
+                                default="ru", verbose_name="Язык")
+    show_online_status = models.BooleanField(default=True, verbose_name="Показывать статус «в сети»")
+    show_own_anonymous_posts = models.BooleanField(default=False, verbose_name="Показывать мои анонимные посты в профиле")
+    show_own_reposts = models.BooleanField(default=False, verbose_name="Показывать мои репосты")
+    show_own_liked_posts = models.BooleanField(default=False, verbose_name="Показывать понравившиеся посты")
+    show_own_commented_posts = models.BooleanField(default=False, verbose_name="Показывать мои комментарии")
+    notify_email_updates = models.BooleanField(default=True, verbose_name="Уведомления на почту")
+    notify_mentions_and_replies = models.BooleanField(default=True, verbose_name="Уведомления об ответах и упоминаниях")
+
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
@@ -99,7 +121,10 @@ class User(AbstractUser):
             validate_iuca_email(self.email)
 
     def save(self, *args, **kwargs):
-        self.full_clean()
+        # Полная валидация при обычном сохранении. Точечные обновления (update_fields),
+        # например last_login при входе, не должны падать из-за валидации остальных полей.
+        if kwargs.get("update_fields") is None:
+            self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -146,3 +171,21 @@ class BlockedUser(models.Model):
         unique_together = ("user", "blocked_user")
         verbose_name = "Заблокированный пользователь"
         verbose_name_plural = "Заблокированные пользователи"
+
+
+class EmailCode(models.Model):
+    """Код подтверждения почты. Хранится только хеш, код одноразовый и с ограниченным сроком."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="email_code")
+    code_hash = models.CharField(max_length=64, blank=True)
+    expires_at = models.DateTimeField()
+    sent_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Код подтверждения почты"
+        verbose_name_plural = "Коды подтверждения почты"
+
+    def __str__(self):
+        return f"Код для {self.user_id}"

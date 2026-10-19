@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --color-bg: 48 67 95;
+  --color-card: 39 56 79;
+  --color-surface: 58 79 109;
+  --color-brand: 90 180 255;
+  --color-brand-hover: 140 203 255;
+  --color-ink: 245 247 250;
+  --color-muted: 183 195 212;
+  --color-line: 74 94 124;
+}
+html[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: 245 247 250;
+  --color-card: 255 255 255;
+  --color-surface: 235 240 246;
+  --color-brand: 37 99 235;
+  --color-brand-hover: 29 78 216;
+  --color-ink: 24 32 44;
+  --color-muted: 91 103 120;
+  --color-line: 214 222 233;
+}
+html, body, #root { min-height: 100%; }
+body {
+  @apply bg-bg font-sans text-ink antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+  background-color: rgb(var(--color-bg));
+  background-image: none;
+}
+html[data-theme='light'] body {
+  background-image: none;
+}
+::selection { background: rgba(90, 180, 255, 0.35); }
+.glass-panel {
+  border: 1px solid rgba(169, 194, 225, 0.14);
+  background: linear-gradient(145deg, rgba(39, 56, 79, 0.78), rgba(35, 51, 73, 0.54));
+  box-shadow: 0 18px 48px rgba(10, 20, 34, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(18px);
+}
+html[data-theme='light'] .glass-panel {
+  border-color: rgba(148, 163, 184, 0.25);
+  background: linear-gradient(145deg, rgba(255,255,255,.92), rgba(245,248,252,.82));
+  box-shadow: 0 18px 48px rgba(31, 41, 55, 0.07), inset 0 1px 0 rgba(255,255,255,.8);
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
