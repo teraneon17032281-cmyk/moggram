@@ -35,8 +35,13 @@ urlpatterns = [
     re_path(r"^api/(?P<path>.*)$", api_not_found),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [
+    re_path(
+        r"^media/(?P<path>.*)$",
+        serve,
+        {"document_root": settings.MEDIA_ROOT},
+    )
+]
 
 # Всё остальное — React SPA
 urlpatterns += [re_path(r"^(?P<path>(?!(?:api|admin|media|static)(?:/|$)).*)$", spa)]
