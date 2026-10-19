@@ -132,6 +132,21 @@ export const feedService = {
   );
 },
 
+  async updatePost(
+  postId: string,
+  content: string,
+  linkUrl?: string,
+): Promise<Post> {
+  const data = await api.post<ApiPost>(
+    `/api/posts/${encodeURIComponent(postId)}/edit/`,
+    {
+      content: content.trim(),
+      link_url: linkUrl?.trim() || null,
+    },
+  );
+  return mapPost(data);
+},
+
   async getUserPosts(username: string): Promise<Post[]> {
     return listFrom(await api.get<PostListResponse | ApiPost[]>(`/api/users/${encodeURIComponent(username)}/posts/`));
   },
