@@ -3,3 +3,4 @@ django-cors-headers==4.9.0
 Pillow>=11.0
 gunicorn>=23,<24
 psycopg[binary]>=3.2,<4
+whitenoise>=6.12,<7
