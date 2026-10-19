@@ -69,7 +69,6 @@ export default function MessagesPage() {
   }, [recipient]);
 
   useEffect(() => {
-    if (recipient) return;
     let active = true;
     const refreshConversations = () => {
       messageService.getConversations()
