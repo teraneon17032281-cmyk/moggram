@@ -25,6 +25,7 @@ urlpatterns = [
     path("posts/", feed.feed),
     path("posts/mine/", feed.my_posts),
     path("posts/<int:post_id>/", feed.delete_post),
+    path("posts/<int:post_id>/edit/", feed.edit_post),
     path("posts/<int:post_id>/like/", feed.toggle_like),
     path("posts/<int:post_id>/repost/", feed.toggle_repost),
     path("posts/<int:post_id>/comments/", feed.comments),
