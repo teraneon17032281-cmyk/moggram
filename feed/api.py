@@ -115,6 +115,35 @@ def my_posts(request):
     return results(request, posts_qs(request.user).filter(author=request.user).order_by("-created_at", "-id")[:limit])
 
 
+@api_view("POST")
+def edit_post(request, post_id):
+    post = Post.objects.filter(pk=post_id, author=request.user).first()
+    if not post:
+        raise ApiError("post_not_found", 404)
+
+    data = get_data(request)
+    content = as_str(data.get("content"))
+
+    if not content and not post.image:
+        raise ApiError(
+            "validation_error",
+            400,
+            errors={"content": ["Напишите текст или прикрепите фото."]},
+        )
+    if len(content) > CONTENT_MAX:
+        raise ApiError(
+            "validation_error",
+            400,
+            errors={"content": [f"Не более {CONTENT_MAX} символов."]},
+        )
+
+    post.content = content
+    post.link_url = clean_link(data.get("link_url"))
+    post.save(update_fields=["content", "link_url"])
+
+    return json_response(post_dict(request, get_post(post.pk, request.user)))
+
+
 # --- Лайки, репосты, комментарии --------------------------------------------------------------------
 
 @api_view("POST")
