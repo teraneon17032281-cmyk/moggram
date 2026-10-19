@@ -5,6 +5,7 @@ interface ApiMessage {
   id: string | number;
   content: string;
   created_at: string;
+  is_read?: boolean;
   sender_id: string | number;
   sender_name: string;
   sender_username: string;
@@ -39,7 +40,7 @@ function mapMessage(message: ApiMessage): DirectMessage {
     throw apiError('invalid_response');
   }
   return {
-    id: String(message.id), content: message.content, createdAt: message.created_at,
+    id: String(message.id), content: message.content, createdAt: message.created_at, isRead: message.is_read ?? false,
     senderId: String(message.sender_id), senderName: message.sender_name,
     senderUsername: message.sender_username, recipientUsername: message.recipient_username,
     attachmentUrl: message.attachment_url ?? null,

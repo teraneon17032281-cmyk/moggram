@@ -60,6 +60,7 @@ export interface DirectMessage {
   id: string;
   content: string;
   createdAt: string;
+  isRead?: boolean;
   senderId: string;
   senderName: string;
   senderUsername: string;
