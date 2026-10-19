@@ -48,7 +48,10 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", _DEV_SECRET)
 if not DEBUG and SECRET_KEY == _DEV_SECRET:
     raise ImproperlyConfigured("Задайте DJANGO_SECRET_KEY в .env, когда DJANGO_DEBUG=False.")
 
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    "localhost,127.0.0.1,moggram-a6a3cufkagdcf6b5.centralindia-01.azurewebsites.net",
+)
 
 
 # --- Приложения ---------------------------------------------------------------
