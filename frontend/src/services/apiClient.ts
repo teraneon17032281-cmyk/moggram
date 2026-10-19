@@ -72,6 +72,7 @@ async function ensureCsrf(): Promise<void> {
 }
 
 async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+async function request<T>(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown)
   if (method !== 'GET') await ensureCsrf();
 
   const headers: Record<string, string> = { Accept: 'application/json' };
