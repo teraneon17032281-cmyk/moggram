@@ -37,7 +37,10 @@ export default function MessagesPage() {
   const [error, setError] = useState('');
   const imageInput = useRef<HTMLInputElement>(null);
   const messageInput = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageScrollRef = useRef<HTMLDivElement>(null);
+  const previousConversationRef = useRef('');
+  const lastMessageIdForScrollRef = useRef<string | null>(null);
+  const shouldStickToBottomRef = useRef(true);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recorderTimer = useRef<number | null>(null);
@@ -54,7 +57,16 @@ export default function MessagesPage() {
   }, [recipient]);
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
-    if (recipient && !loading) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (!recipient || loading) return;
+    const conversationChanged = previousConversationRef.current !== recipient;
+    const latestMessageId = messages.length ? messages[messages.length - 1].id : null;
+    const hasNewLastMessage = latestMessageId !== lastMessageIdForScrollRef.current;
+    previousConversationRef.current = recipient;
+    lastMessageIdForScrollRef.current = latestMessageId;
+    if (conversationChanged || (hasNewLastMessage && shouldStickToBottomRef.current)) {
+      const container = messageScrollRef.current;
+      if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }
   }, [recipient, messages, loading]);
   useEffect(() => {
     if (!recipient) return;
@@ -242,7 +254,7 @@ export default function MessagesPage() {
                 <div className="flex items-center gap-2"><span className={`hidden items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium sm:inline-flex ${profile?.isOnline ? 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-500' : 'border-line bg-surface/50 text-muted'}`}><span className={`h-1.5 w-1.5 rounded-full ${profile?.isOnline ? 'bg-emerald-400' : 'bg-muted/60'}`} />{onlineLabel}</span><Link to={`/users/${encodeURIComponent(recipient)}`} aria-label={russian ? 'Открыть профиль' : 'Open profile'} className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-card/70 text-muted transition hover:border-brand/25 hover:text-brand"><UserRound size={16} /></Link></div>
               </header>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-4 overscroll-contain overflow-y-auto bg-[radial-gradient(ellipse_at_50%_0%,rgba(83,169,255,0.055),transparent_60%)] p-4 sm:p-6">
+              <div ref={messageScrollRef} onScroll={() => { const container = messageScrollRef.current; if (container) shouldStickToBottomRef.current = container.scrollHeight - container.scrollTop - container.clientHeight < 120; }} className="flex min-h-0 flex-1 flex-col gap-4 overscroll-contain overflow-y-auto bg-[radial-gradient(ellipse_at_50%_0%,rgba(83,169,255,0.055),transparent_60%)] p-4 sm:p-6">
                 <div className="my-1 flex justify-center"><span className="rounded-full border border-line/70 bg-card/70 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted">{russian ? 'Начало переписки' : 'Conversation'}</span></div>
                 {error && <Alert variant="error">{error}</Alert>}
                 {loading && <p className="py-8 text-center text-sm text-muted">{russian ? 'Загружаем переписку…' : 'Loading conversation…'}</p>}
@@ -267,7 +279,7 @@ export default function MessagesPage() {
                     {emojiPicker === message.id && <div className={`absolute top-full z-20 mt-1 flex max-w-[min(90vw,320px)] flex-wrap gap-1 rounded-2xl border border-line bg-card p-2 shadow-xl ${mine ? 'right-0' : 'left-0'}`}>{MESSAGE_EMOJIS.map((emoji) => <button key={emoji} type="button" onClick={() => chooseEmoji(emoji)} aria-label={`${russian ? 'Реакция' : 'React'} ${emoji}`} className="grid h-9 w-9 place-items-center rounded-lg text-lg hover:bg-surface">{emoji}</button>)}</div>}
                   </div>;
                 })}
-                <div ref={messagesEndRef} aria-hidden="true" className="h-px shrink-0" />
+                
               </div>
 
               <form onSubmit={send} className="shrink-0 border-t border-line/80 bg-card/90 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:p-4">
