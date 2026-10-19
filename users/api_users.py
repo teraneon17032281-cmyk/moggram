@@ -149,3 +149,28 @@ def follow_toggle(request, username):
         "following": created,
         "followers_count": Follow.objects.filter(following=target).count(),
     })
+
+
+@api_view("GET")
+def follow_list(request, username, relation):
+    """Список подписчиков или подписок публичного профиля."""
+    if relation not in {"followers", "following"}:
+        raise ApiError("not_found", 404)
+    target = get_public_user(username)
+    if target.pk != request.user.pk and is_blocked_between(request.user, target):
+        raise ApiError("user_not_found", 404)
+
+    if relation == "followers":
+        user_ids = Follow.objects.filter(following=target).values_list("follower_id", flat=True)
+    else:
+        user_ids = Follow.objects.filter(follower=target).values_list("following_id", flat=True)
+
+    excluded = blocked_ids(request.user)
+    users = list(with_profile_counts(
+        public_users().filter(pk__in=user_ids).exclude(pk__in=excluded)
+    ).order_by("username"))
+    ids = [person.pk for person in users]
+    following, related = relation_sets(request.user, ids)
+    return json_response({
+        "results": [profile_dict(request, person, request.user, following, related) for person in users]
+    })
