@@ -20,6 +20,7 @@ class Message(models.Model):
     reply_to = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL,
                                  related_name="replies", verbose_name="Ответ на")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    read_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name="Прочитано")
 
     class Meta:
         verbose_name = "Сообщение"
