@@ -33,6 +33,8 @@ urlpatterns = [
     # Люди: «me» раньше «<username>»
     path("users/", users.user_list),
     path("users/me/", users.me_profile),
+    path("users/<str:username>/followers/", users.follow_list, {"relation": "followers"}),
+    path("users/<str:username>/following/", users.follow_list, {"relation": "following"}),
     path("users/<str:username>/", users.user_detail),
     path("users/<str:username>/follow/", users.follow_toggle),
     path("users/<str:username>/posts/", feed.user_posts),
