@@ -5,6 +5,7 @@ import {
   Heart,
   Link as LinkIcon,
   MessageCircle,
+  Pencil,
   Repeat2,
   Trash2,
 } from 'lucide-react';
@@ -58,7 +59,7 @@ export default function PostCard({
   const authorHref = !anonymous
     ? `/users/${encodeURIComponent(post.author!.username)}`
     : undefined;
-  const canDelete = Boolean(
+  const isOwner = Boolean(
     user && post.author && user.username === post.author.username,
   );
 
@@ -75,6 +76,12 @@ export default function PostCard({
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [deleted, setDeleted] = useState(false);
+
+  const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState(post.content);
+  const [linkUrl, setLinkUrl] = useState(post.linkUrl ?? '');
+  const [draftContent, setDraftContent] = useState(post.content);
+  const [draftLinkUrl, setDraftLinkUrl] = useState(post.linkUrl ?? '');
 
   const toggleLike = async () => {
     setActionError('');
@@ -135,14 +142,14 @@ export default function PostCard({
 
   const addComment = async (event: FormEvent) => {
     event.preventDefault();
-    const content = commentText.trim();
-    if (!content) return;
+    const commentContent = commentText.trim();
+    if (!commentContent) return;
 
     setActionError('');
     setBusy(true);
 
     try {
-      const comment = await feedService.addComment(post.id, content);
+      const comment = await feedService.addComment(post.id, commentContent);
       setComments((current) => [...current, comment]);
       setCommentsCount((value) => value + 1);
       setCommentText('');
@@ -152,6 +159,36 @@ export default function PostCard({
     } finally {
       setBusy(false);
     }
+  };
+
+  const savePost = async (event: FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
+
+    setActionError('');
+    setBusy(true);
+
+    try {
+      const updated = await feedService.updatePost(
+        post.id,
+        draftContent,
+        draftLinkUrl,
+      );
+      setContent(updated.content);
+      setLinkUrl(updated.linkUrl ?? '');
+      setEditing(false);
+    } catch {
+      setActionError(t('actionUnavailable'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancelEditing = () => {
+    setDraftContent(content);
+    setDraftLinkUrl(linkUrl);
+    setEditing(false);
+    setActionError('');
   };
 
   const deletePost = async () => {
@@ -180,10 +217,10 @@ export default function PostCard({
         : 'group mx-3 my-3 rounded-2xl border border-line/70 bg-gradient-to-br from-card via-card to-surface/40 px-4 py-4 shadow-md shadow-slate-950/[0.07] ring-1 ring-white/[0.025] transition duration-200 hover:-translate-y-px hover:border-brand/25 hover:shadow-xl hover:shadow-slate-950/10 sm:mx-4 sm:px-5 sm:py-5';
 
   const safeLink = (() => {
-    if (!post.linkUrl) return null;
+    if (!linkUrl) return null;
 
     try {
-      const url = new URL(post.linkUrl);
+      const url = new URL(linkUrl);
       return url.protocol === 'https:' || url.protocol === 'http:' ? url : null;
     } catch {
       return null;
@@ -275,32 +312,73 @@ export default function PostCard({
             </p>
           )}
 
-          <p className="mt-3 whitespace-pre-wrap break-words text-[15px] leading-7 text-ink/95">
-            {post.content}
-          </p>
+          {editing ? (
+            <form onSubmit={savePost} className="mt-3 space-y-3">
+              <textarea
+                value={draftContent}
+                onChange={(event) => setDraftContent(event.target.value)}
+                maxLength={5000}
+                rows={4}
+                placeholder="Текст публикации"
+                className="w-full resize-y rounded-xl border border-line bg-card px-3 py-2 text-sm text-ink outline-none focus:border-brand"
+              />
+              <input
+                value={draftLinkUrl}
+                onChange={(event) => setDraftLinkUrl(event.target.value)}
+                maxLength={500}
+                placeholder="Ссылка (необязательно)"
+                className="w-full rounded-xl border border-line bg-card px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-brand"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {language === 'ru' ? 'Сохранить' : 'Save'}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  disabled={busy}
+                  className="rounded-full border border-line px-4 py-2 text-sm text-ink disabled:opacity-50"
+                >
+                  {language === 'ru' ? 'Отмена' : 'Cancel'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              {content && (
+                <p className="mt-3 whitespace-pre-wrap break-words text-[15px] leading-7 text-ink/95">
+                  {content}
+                </p>
+              )}
 
-          {post.imageUrl && (
-            <img
-              src={post.imageUrl}
-              alt=""
-              loading="lazy"
-              className="mt-4 max-h-[520px] w-full rounded-2xl border border-white/10 object-cover shadow-xl shadow-slate-950/20"
-            />
-          )}
+              {post.imageUrl && (
+                <img
+                  src={post.imageUrl}
+                  alt=""
+                  loading="lazy"
+                  className="mt-4 max-h-[520px] w-full rounded-2xl border border-white/10 object-cover shadow-xl shadow-slate-950/20"
+                />
+              )}
 
-          {safeLink && (
-            <a
-              href={safeLink.toString()}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-brand/15 bg-brand/[0.06] px-3 py-2 text-sm text-brand transition hover:border-brand/35 hover:bg-brand/10"
-            >
-              <LinkIcon size={15} className="shrink-0" />
-              <span className="truncate">
-                {safeLink.hostname}
-                {safeLink.pathname !== '/' ? safeLink.pathname : ''}
-              </span>
-            </a>
+              {safeLink && (
+                <a
+                  href={safeLink.toString()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-brand/15 bg-brand/[0.06] px-3 py-2 text-sm text-brand transition hover:border-brand/35 hover:bg-brand/10"
+                >
+                  <LinkIcon size={15} className="shrink-0" />
+                  <span className="truncate">
+                    {safeLink.hostname}
+                    {safeLink.pathname !== '/' ? safeLink.pathname : ''}
+                  </span>
+                </a>
+              )}
+            </>
           )}
 
           <div className="mt-3 flex max-w-[560px] items-center justify-between border-t border-line/50 pt-2 text-xs text-muted">
@@ -324,13 +402,6 @@ export default function PostCard({
               disabled={busy}
               aria-label={`${reposted ? (language === 'ru' ? 'Убрать репост' : 'Undo repost') : t('repost')} (${reposts})`}
               aria-pressed={reposted}
-              title={
-                reposted
-                  ? language === 'ru'
-                    ? 'Нажми, чтобы убрать репост'
-                    : 'Click to undo repost'
-                  : undefined
-              }
               className={`group inline-flex items-center gap-2 rounded-full px-2.5 py-2 transition disabled:opacity-50 ${
                 reposted
                   ? 'bg-emerald-400/10 text-emerald-400'
@@ -367,17 +438,37 @@ export default function PostCard({
           </div>
         </div>
 
-        {canDelete && (
-          <button
-            type="button"
-            onClick={() => void deletePost()}
-            disabled={busy}
-            aria-label="Удалить публикацию"
-            title="Удалить публикацию"
-            className="rounded-full p-2 text-muted transition hover:bg-rose-400/10 hover:text-rose-400 disabled:opacity-50"
-          >
-            <Trash2 size={17} />
-          </button>
+        {isOwner && (
+          <div className="flex shrink-0 items-center gap-1">
+            {!editing && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftContent(content);
+                  setDraftLinkUrl(linkUrl);
+                  setEditing(true);
+                  setActionError('');
+                }}
+                disabled={busy}
+                aria-label="Редактировать публикацию"
+                title="Редактировать публикацию"
+                className="rounded-full p-2 text-muted transition hover:bg-brand/10 hover:text-brand disabled:opacity-50"
+              >
+                <Pencil size={17} />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => void deletePost()}
+              disabled={busy}
+              aria-label="Удалить публикацию"
+              title="Удалить публикацию"
+              className="rounded-full p-2 text-muted transition hover:bg-rose-400/10 hover:text-rose-400 disabled:opacity-50"
+            >
+              <Trash2 size={17} />
+            </button>
+          </div>
         )}
       </div>
 
