@@ -5,6 +5,7 @@ import AppHeader from '../components/AppHeader';
 import Alert from '../components/ui/Alert';
 import Button from '../components/ui/Button';
 import PostCard from '../components/feed/PostCard';
+import FollowListModal from '../components/profile/FollowListModal';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
 import { errorMessage } from '../services/apiClient';
@@ -26,6 +27,7 @@ export default function PublicProfilePage() {
   const [likedPosts, setLikedPosts] = useState<Post[]>([]);
   const [commentedPosts, setCommentedPosts] = useState<CommentActivity[]>([]);
   const [activeTab, setActiveTab] = useState<PublicProfileTab>('posts');
+  const [followList, setFollowList] = useState<'followers' | 'following' | null>(null);
   const [listError, setListError] = useState('');
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
@@ -85,7 +87,7 @@ export default function PublicProfilePage() {
               </div>
             </div>
             {profile.bio && <p className="relative mt-5 text-sm leading-6 text-muted">{profile.bio}</p>}
-            <div className="relative mt-6 flex gap-6 border-t border-line/70 pt-4 text-sm"><span><b>{profile.postCount}</b> <small className="text-muted">{russian ? 'публикаций' : 'posts'}</small></span><span><b>{profile.followersCount}</b> <small className="text-muted">{russian ? 'подписчиков' : 'followers'}</small></span><span><b>{profile.followingCount}</b> <small className="text-muted">{russian ? 'подписок' : 'following'}</small></span></div>
+            <div className="relative mt-6 flex flex-wrap gap-6 border-t border-line/70 pt-4 text-sm"><span><b>{profile.postCount}</b> <small className="text-muted">{russian ? 'публикаций' : 'posts'}</small></span><button type="button" onClick={() => setFollowList('followers')} className="text-left transition hover:text-brand" aria-label={russian ? 'Посмотреть подписчиков' : 'View followers'}><b>{profile.followersCount}</b> <small className="text-muted">{russian ? 'подписчиков' : 'followers'}</small></button><button type="button" onClick={() => setFollowList('following')} className="text-left transition hover:text-brand" aria-label={russian ? 'Посмотреть подписки' : 'View following'}><b>{profile.followingCount}</b> <small className="text-muted">{russian ? 'подписок' : 'following'}</small></button></div>
           </section>
           <section>
             <div className="mb-3 flex gap-2 overflow-x-auto border-b border-line">
@@ -99,6 +101,7 @@ export default function PublicProfilePage() {
           </section>
         </>}
         {error && !loading && <Button variant="secondary" onClick={() => void load()} className="mx-auto !w-auto">{russian ? 'Повторить' : 'Try again'}</Button>}
+        {followList && profile && <FollowListModal username={profile.username} relation={followList} onClose={() => setFollowList(null)} />}
       </main>
     </div>
   );
