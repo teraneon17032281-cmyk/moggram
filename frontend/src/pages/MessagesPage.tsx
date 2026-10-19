@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowUpRight, BadgeCheck, Forward, ImagePlus, MessageCircle, MessageCircleMore, Mic, Reply, Search, Send, Smile, Sparkles, Square, UserRound, X } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, BadgeCheck, Check, CheckCheck, Forward, ImagePlus, MessageCircle, MessageCircleMore, Mic, Reply, Search, Send, Smile, Sparkles, Square, UserRound, X } from 'lucide-react';
 import AppHeader from '../components/AppHeader';
 import Alert from '../components/ui/Alert';
 import { useAuth } from '../contexts/AuthContext';
@@ -57,14 +57,30 @@ export default function MessagesPage() {
     if (recipient && !loading) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [recipient, messages, loading]);
   useEffect(() => {
+    if (!recipient) return;
+    let active = true;
+    const refreshMessages = () => {
+      messageService.getConversation(recipient)
+        .then((items) => { if (active) setMessages(items); })
+        .catch(() => undefined);
+    };
+    const timer = window.setInterval(refreshMessages, 10_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [recipient]);
+
+  useEffect(() => {
     if (recipient) return;
     let active = true;
+    const refreshConversations = () => {
+      messageService.getConversations()
+        .then((items) => { if (active) setConversations(items); })
+        .catch((err) => { if (active) setError(errorMessage(err)); })
+        .finally(() => { if (active) setConversationsLoading(false); });
+    };
     setConversationsLoading(true);
-    messageService.getConversations()
-      .then((items) => { if (active) setConversations(items); })
-      .catch((err) => { if (active) setError(errorMessage(err)); })
-      .finally(() => { if (active) setConversationsLoading(false); });
-    return () => { active = false; };
+    refreshConversations();
+    const timer = window.setInterval(refreshConversations, 10_000);
+    return () => { active = false; window.clearInterval(timer); };
   }, [recipient]);
   useEffect(() => {
     mountedRef.current = true;
@@ -201,6 +217,21 @@ export default function MessagesPage() {
             <Link to="/search" className="group flex items-center gap-3 rounded-2xl border border-line/80 bg-card/75 p-3.5 transition hover:-translate-y-0.5 hover:border-brand/25 hover:shadow-lg hover:shadow-brand/5">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 text-brand"><Search size={18} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{russian ? 'Начать разговор' : 'Start a conversation'}</span><span className="mt-0.5 block text-xs text-muted">{russian ? 'Найди студента IUCA' : 'Find an IUCA student'}</span></span><ArrowUpRight size={16} className="text-muted transition group-hover:text-brand" />
             </Link>
+            {!recipient && <div className="mt-5">
+              <div className="mb-3 flex items-center justify-between"><h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{russian ? 'Переписки' : 'Conversations'}</h3><button type="button" onClick={() => void messageService.getConversations().then(setConversations).catch((err) => setError(errorMessage(err)))} className="text-xs font-semibold text-brand hover:underline">{russian ? 'Обновить' : 'Refresh'}</button></div>
+              {conversationsLoading && conversations.length === 0 ? <p className="py-5 text-center text-xs text-muted">{russian ? 'Загружаем…' : 'Loading…'}</p> : conversations.length ? <div className="max-h-[52vh] space-y-1 overflow-y-auto">
+                {conversations.map((conversation) => {
+                  const last = conversation.lastMessage;
+                  const fromMe = last.senderUsername === user?.username || last.senderId === user?.id;
+                  const excerpt = last.content || (last.attachmentType === 'image' ? (russian ? 'Фото' : 'Photo') : last.attachmentType === 'audio' ? (russian ? 'Голосовое сообщение' : 'Voice message') : (russian ? 'Вложение' : 'Attachment'));
+                  return <Link key={conversation.username} to={'/messages?to=' + encodeURIComponent(conversation.username)} className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition hover:bg-brand/[0.08]">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-brand/15 bg-surface text-sm font-semibold">{conversation.avatarUrl ? <img src={conversation.avatarUrl} alt="" className="h-full w-full object-cover" /> : conversation.fullName.charAt(0).toUpperCase()}</span>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold">{conversation.fullName}</span><span className="mt-0.5 block truncate text-[11px] text-muted">{fromMe && (russian ? 'Вы: ' : 'You: ')}{excerpt}</span></span>
+                    <span className="shrink-0 text-[10px] text-muted">{new Date(last.createdAt).toLocaleTimeString(russian ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </Link>;
+                })}
+              </div> : <p className="rounded-xl border border-dashed border-line px-3 py-5 text-center text-xs text-muted">{russian ? 'Пока переписок нет. Найди человека и напиши ему.' : 'No conversations yet. Find someone and send a message.'}</p>}
+            </div>}
             {recipient && <div className="mt-4 rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/[0.11] via-card/90 to-card/70 p-3.5 shadow-sm"><div className="flex items-center gap-3"><span className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-card bg-brand/10 text-sm font-bold text-brand ring-2 ring-brand/15">{profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" /> : <UserRound size={18} />}{profile?.isOnline !== undefined && <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card ${profile.isOnline ? 'bg-emerald-400' : 'bg-slate-400'}`} />}</span><span className="min-w-0"><span className="flex items-center gap-1 truncate text-sm font-semibold">{profile?.fullName ?? `@${recipient}`}{profile?.isVerified && <BadgeCheck size={14} className="shrink-0 text-brand" />}</span><span className="mt-0.5 block truncate text-xs text-muted">@{recipient}</span></span></div><div className="mt-3 flex items-center gap-2 text-[11px] text-muted"><span className={`h-1.5 w-1.5 rounded-full ${profile?.isOnline ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.75)]' : 'bg-brand/70'}`} />{onlineLabel}</div></div>}
             <div className="mt-5 rounded-2xl border border-line/70 bg-card/45 p-4"><div className="flex items-center gap-2 text-brand"><Sparkles size={15} /><span className="text-xs font-semibold">{russian ? 'Твоё пространство' : 'Your space'}</span></div><p className="mt-2 text-xs leading-5 text-muted">{russian ? 'Сообщения доступны только участникам переписки.' : 'Messages are visible only to the people in the conversation.'}</p></div>
           </aside>
@@ -226,7 +257,7 @@ export default function MessagesPage() {
                       {message.attachmentUrl && message.attachmentType === 'image' && <img src={message.attachmentUrl} alt={message.attachmentName ?? (russian ? 'Фото' : 'Photo')} className="mb-2 max-h-72 max-w-full rounded-xl object-cover" />}
                       {message.attachmentUrl && message.attachmentType === 'audio' && <audio controls src={message.attachmentUrl} className="mb-2 max-w-full" />}
                       {message.content && <p className="whitespace-pre-wrap break-words">{message.content}</p>}
-                      <time className={`mt-1.5 block text-[10px] ${mine ? 'text-[#10243a]/65' : 'text-muted'}`}>{new Date(message.createdAt).toLocaleString(russian ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</time>
+                      <div className={`mt-1.5 flex items-center gap-1 text-[10px] ${mine ? 'text-[#10243a]/65' : 'text-muted'}`}><time>{new Date(message.createdAt).toLocaleString(russian ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</time>{mine && (message.isRead ? <CheckCheck size={13} aria-label={russian ? 'Прочитано' : 'Read'} title={russian ? 'Прочитано' : 'Read'} /> : <Check size={13} aria-label={russian ? 'Отправлено' : 'Sent'} title={russian ? 'Отправлено' : 'Sent'} />)}</div>
                     </div>
                     {!!message.reactions?.length && <div className="mt-1 flex flex-wrap gap-1">{message.reactions.map((reaction) => <button key={reaction.emoji} type="button" onClick={() => void reactToMessage(message.id, reaction.emoji)} aria-label={`${reaction.emoji} ${reaction.count}`} aria-pressed={reaction.reactedByMe} className={`rounded-full border px-2 py-0.5 text-xs ${reaction.reactedByMe ? 'border-brand/50 bg-brand/15' : 'border-line bg-card/80'}`}>{reaction.emoji} {reaction.count}</button>)}</div>}
                     <div className="mt-1 flex gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
