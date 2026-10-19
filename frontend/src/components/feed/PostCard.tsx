@@ -384,6 +384,27 @@ export default function PostCard({
           <div className="mt-3 flex max-w-[560px] items-center justify-between border-t border-line/50 pt-2 text-xs text-muted">
             <button
               type="button"
+              onClick={() => void toggleLike()}
+              disabled={busy}
+              aria-label={`${t('like')} (${likes})`}
+              aria-pressed={liked}
+              className={`group inline-flex items-center gap-2 rounded-full px-2.5 py-2 transition disabled:opacity-50 ${
+                liked
+                  ? 'bg-rose-400/10 text-rose-400'
+                  : 'hover:bg-rose-400/10 hover:text-rose-400'
+              }`}
+            >
+              <Heart
+                size={17}
+                className={`transition group-hover:scale-110 ${
+                  liked ? 'fill-current' : ''
+                }`}
+              />
+              {likes}
+            </button>
+
+            <button
+              type="button"
               onClick={() => void toggleComments()}
               aria-label={`${t('comment')} (${commentsCount})`}
               aria-expanded={commentsOpen}
@@ -415,26 +436,9 @@ export default function PostCard({
               {reposts}
             </button>
 
-            <button
-              type="button"
-              onClick={() => void toggleLike()}
-              disabled={busy}
-              aria-label={`${t('like')} (${likes})`}
-              aria-pressed={liked}
-              className={`group inline-flex items-center gap-2 rounded-full px-2.5 py-2 transition disabled:opacity-50 ${
-                liked
-                  ? 'bg-rose-400/10 text-rose-400'
-                  : 'hover:bg-rose-400/10 hover:text-rose-400'
-              }`}
-            >
-              <Heart
-                size={17}
-                className={`transition group-hover:scale-110 ${
-                  liked ? 'fill-current' : ''
-                }`}
-              />
-              {likes}
-            </button>
+            __REPOST_BUTTON__
+
+            __LIKE_BUTTON__
           </div>
         </div>
 
