@@ -6,7 +6,7 @@
  * - Never fakes a response: if the server is down or answers with something that is
  *   not JSON, the call fails with an ApiError that says so.
  */
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
 
 const UNAVAILABLE = `Can't reach the server. Sending real emails requires the Django API to be running and configured (${API_BASE_URL}).`;
 const UNEXPECTED = `The server returned an unexpected response. Check that the Django API is running and that VITE_API_BASE_URL points to it (${API_BASE_URL}).`;
