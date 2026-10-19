@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from django.core.files.base import ContentFile
 from django.db.models import Case, F, IntegerField, Max, Q, When
+from django.utils import timezone
 
 from core import throttle
 from core.http import ApiError, api_view, as_str, get_data, json_response, positive_int
@@ -44,6 +45,7 @@ def message_dict(request, message):
         "id": message.id,
         "content": message.content,
         "created_at": iso(message.created_at),
+        "is_read": message.read_at is not None,
         "sender_id": message.sender_id,
         "sender_name": display_name(message.sender),
         "sender_username": message.sender.username,
@@ -129,6 +131,9 @@ def conversations(request):
 def messages(request):
     if request.method == "GET":
         other = get_public_user(as_str(request.GET.get("with"), 50))
+        Message.objects.filter(
+            conversation_filter(request.user, other), recipient=request.user, read_at__isnull=True
+        ).update(read_at=timezone.now())
         limit = positive_int(request.GET.get("limit"), HISTORY_LIMIT, HISTORY_LIMIT)
         items = list(message_qs().filter(conversation_filter(request.user, other)).order_by("-created_at", "-id")[:limit])
         items.reverse()
