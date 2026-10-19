@@ -221,3 +221,15 @@ def user_commented_posts(request, username):
             for c in items if c.post_id in posts
         ]
     })
+
+
+@api_view("DELETE")
+def delete_post(request, post_id):
+    post = Post.objects.filter(pk=post_id, author=request.user).first()
+    if not post:
+        raise ApiError("post_not_found", 404)
+
+    if post.image:
+        post.image.delete(save=False)
+    post.delete()
+    return json_response({"deleted": True})
