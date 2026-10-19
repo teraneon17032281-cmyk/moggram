@@ -126,6 +126,11 @@ export const feedService = {
     const data = await api.post<ApiPost>('/api/posts/', body ?? { content: content.trim(), is_anonymous: isAnonymous, link_url: linkUrl?.trim() || null });
     return mapPost(data);
   },
+    async deletePost(postId: string): Promise<void> {
+    await api.delete<{ deleted: boolean }>(
+    `/api/posts/${encodeURIComponent(postId)}/`,
+  );
+},
 
   async getUserPosts(username: string): Promise<Post[]> {
     return listFrom(await api.get<PostListResponse | ApiPost[]>(`/api/users/${encodeURIComponent(username)}/posts/`));
