@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Camera, Heart, MessageCircle, Pencil, Repeat2, Save, X } from 'lucide-react';
 import AppHeader from '../components/AppHeader';
 import PostCard from '../components/feed/PostCard';
+import FollowListModal from '../components/profile/FollowListModal';
 import Alert from '../components/ui/Alert';
 import Button from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [commentedPosts, setCommentedPosts] = useState<CommentActivity[]>([]);
   const [listErrors, setListErrors] = useState<Partial<Record<'reposts' | 'liked' | 'comments', string>>>({});
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
+  const [followList, setFollowList] = useState<'followers' | 'following' | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [profileBio, setProfileBio] = useState('');
@@ -110,7 +112,7 @@ export default function ProfilePage() {
             <div className="flex gap-2"><button type="button" onClick={startEditing} className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card/70 px-3 text-xs font-semibold text-muted transition hover:border-brand/30 hover:text-brand"><Pencil size={14} />{language === 'ru' ? 'Редактировать' : 'Edit profile'}</button><Link to="/messages" className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card/70 px-3 text-xs font-semibold text-muted transition hover:border-brand/30 hover:text-brand"><MessageCircle size={15} /><span className="hidden sm:inline">{language === 'ru' ? 'Сообщения' : 'Messages'}</span></Link></div>
           </div>
           <p className="relative mt-4 whitespace-pre-wrap text-sm text-muted">{profileBio || t('profileIntro')}</p>
-          <div className="relative mt-5 flex gap-6 border-t border-line/70 pt-4 text-sm"><span><b>{visiblePosts.length}</b> <small className="text-muted">{language === 'ru' ? 'публикаций' : 'posts'}</small></span><span><b>{user.followersCount ?? 0}</b> <small className="text-muted">{language === 'ru' ? 'подписчиков' : 'followers'}</small></span><span><b>{user.followingCount ?? 0}</b> <small className="text-muted">{language === 'ru' ? 'подписок' : 'following'}</small></span></div>
+          <div className="relative mt-5 flex flex-wrap gap-6 border-t border-line/70 pt-4 text-sm"><span><b>{visiblePosts.length}</b> <small className="text-muted">{language === 'ru' ? 'публикаций' : 'posts'}</small></span><button type="button" onClick={() => setFollowList('followers')} className="text-left transition hover:text-brand" aria-label={language === 'ru' ? 'Посмотреть подписчиков' : 'View followers'}><b>{user.followersCount ?? 0}</b> <small className="text-muted">{language === 'ru' ? 'подписчиков' : 'followers'}</small></button><button type="button" onClick={() => setFollowList('following')} className="text-left transition hover:text-brand" aria-label={language === 'ru' ? 'Посмотреть подписки' : 'View following'}><b>{user.followingCount ?? 0}</b> <small className="text-muted">{language === 'ru' ? 'подписок' : 'following'}</small></button></div>
         </section>
         {editing && <form onSubmit={(event) => void saveProfile(event)} className="space-y-4 rounded-3xl border border-line bg-card p-5 shadow-xl shadow-slate-950/[0.08] sm:p-6">
           <div className="flex items-center justify-between"><div><h2 className="font-display text-lg font-bold">{language === 'ru' ? 'Настроить профиль' : 'Customize profile'}</h2><p className="mt-1 text-xs text-muted">{language === 'ru' ? 'Обнови имя, ник, фото и описание.' : 'Update your name, username, photo and bio.'}</p></div><button type="button" onClick={() => { setAvatarFile(null); setAvatarPreview(''); setEditing(false); }} aria-label={language === 'ru' ? 'Закрыть' : 'Close'} className="rounded-lg p-2 text-muted hover:bg-surface hover:text-ink"><X size={17} /></button></div>
@@ -143,6 +145,7 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-dashed border-line bg-card/50 px-5 py-12 text-center text-sm text-muted">{t('noPosts')}</div>
           )}
         </div>
+      {followList && <FollowListModal username={user.username} relation={followList} onClose={() => setFollowList(null)} />}
       </main>
     </div>
   );
