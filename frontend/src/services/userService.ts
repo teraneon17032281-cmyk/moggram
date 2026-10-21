@@ -7,6 +7,7 @@ interface ApiCampusUser {
   username: string;
   avatar_url?: string | null;
   is_verified?: boolean;
+  is_teacher?: boolean;
   bio?: string;
   post_count?: number;
   followers_count?: number;
@@ -26,7 +27,7 @@ function mapUser(user: ApiCampusUser): CampusProfile {
   }
   return {
     id: String(user.id), fullName: user.full_name, username: user.username,
-    avatarUrl: user.avatar_url ?? null, isVerified: user.is_verified === true,
+    avatarUrl: user.avatar_url ?? null, isVerified: user.is_verified === true, isTeacher: user.is_teacher === true,
     bio: user.bio ?? '', postCount: user.post_count ?? 0,
     followersCount: user.followers_count ?? 0, followingCount: user.following_count ?? 0,
     isFollowing: user.is_following === true,
