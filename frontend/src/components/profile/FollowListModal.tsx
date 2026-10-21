@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { UserRoundCheck, UserRoundPlus, X } from 'lucide-react';
 import { usePreferences } from '../../contexts/PreferencesContext';
 import { errorMessage } from '../../services/apiClient';
 import { userService } from '../../services/userService';
@@ -20,6 +20,8 @@ export default function FollowListModal({
   const [people, setPeople] = useState<CampusProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [workingUsernames, setWorkingUsernames] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     let active = true;
@@ -31,6 +33,23 @@ export default function FollowListModal({
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [username, relation]);
+
+  const togglePersonFollow = async (person: CampusProfile) => {
+    setActionError('');
+    setWorkingUsernames((current) => new Set(current).add(person.username));
+    try {
+      const result = await userService.toggleFollow(person.username);
+      setPeople((current) => current.map((item) => item.id === person.id ? { ...item, isFollowing: result.following } : item));
+    } catch (err) {
+      setActionError(errorMessage(err));
+    } finally {
+      setWorkingUsernames((current) => {
+        const next = new Set(current);
+        next.delete(person.username);
+        return next;
+      });
+    }
+  };
 
   const title = relation === 'followers'
     ? (russian ? 'Подписчики' : 'Followers')
@@ -64,18 +83,33 @@ export default function FollowListModal({
             <p role="alert" className="py-8 text-center text-sm text-rose-400">{error}</p>
           ) : people.length ? (
             <div className="space-y-1">
-              {people.map((person) => (
-                <Link key={person.id} to={`/users/${encodeURIComponent(person.username)}`} onClick={onClose} className="flex items-center gap-3 rounded-2xl px-3 py-2.5 transition hover:bg-surface">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-brand/15 bg-surface text-sm font-semibold text-ink">
-                    {person.avatarUrl ? <img src={person.avatarUrl} alt="" className="h-full w-full object-cover" /> : person.fullName.charAt(0).toUpperCase()}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-ink">{person.fullName}</span>
-                    <span className="block truncate text-xs text-muted">@{person.username}</span>
-                  </span>
-                  {person.isFollowing && <span className="shrink-0 rounded-full border border-brand/20 bg-brand/[0.08] px-2.5 py-1 text-[10px] font-medium text-brand">{russian ? 'Подписан' : 'Following'}</span>}
-                </Link>
-              ))}
+              {actionError && <p role="alert" className="mx-2 mb-2 rounded-xl bg-rose-500/10 px-3 py-2 text-xs text-rose-400">{actionError}</p>}
+              {people.map((person) => {
+                const working = workingUsernames.has(person.username);
+                return (
+                  <div key={person.id} className="flex items-center gap-2 rounded-2xl px-2 py-2 transition hover:bg-surface">
+                    <Link to={`/users/${encodeURIComponent(person.username)}`} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-3 py-0.5">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-brand/15 bg-surface text-sm font-semibold text-ink">
+                        {person.avatarUrl ? <img src={person.avatarUrl} alt="" className="h-full w-full object-cover" /> : person.fullName.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-ink">{person.fullName}</span>
+                        <span className="block truncate text-xs text-muted">@{person.username}</span>
+                      </span>
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={working}
+                      aria-pressed={person.isFollowing}
+                      onClick={() => void togglePersonFollow(person)}
+                      className={`inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-[11px] font-semibold transition disabled:cursor-wait disabled:opacity-60 sm:px-3 ${person.isFollowing ? 'border-line bg-surface/70 text-muted hover:border-rose-400/40 hover:text-rose-300' : 'border-brand/25 bg-brand/10 text-brand hover:bg-brand/15'}`}
+                    >
+                      {person.isFollowing ? <UserRoundCheck size={14} /> : <UserRoundPlus size={14} />}
+                      <span>{working ? (russian ? 'Сохраняем…' : 'Saving…') : person.isFollowing ? (russian ? 'Вы подписаны' : 'Following') : (russian ? 'Подписаться' : 'Follow')}</span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="py-8 text-center text-sm text-muted">{russian ? 'Список пока пуст.' : 'This list is empty.'}</p>
