@@ -10,6 +10,11 @@ on:
       - main
   workflow_dispatch:
 
+# Serialize production deployments so Azure OneDeploy does not reject overlapping uploads.
+concurrency:
+  group: moggram-production-deploy
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
