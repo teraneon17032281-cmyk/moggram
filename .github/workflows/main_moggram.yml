@@ -82,5 +82,4 @@ jobs:
 
       - name: Configure Django startup and migrate database
         run: |
-          APP_RESOURCE_GROUP=$(az webapp show --name moggram --query resourceGroup -o tsv)
-          az webapp config set --resource-group "$APP_RESOURCE_GROUP" --name moggram --startup-file "bash startup.sh" --output none
+          az webapp config set --resource-group "moggram_group" --name moggram --startup-file "bash startup.sh" --output none
