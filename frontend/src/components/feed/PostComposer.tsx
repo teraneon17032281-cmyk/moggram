@@ -80,7 +80,7 @@ export default function PostComposer({ user, submitting, error, onSubmit, varian
         </div>
         {(error || imageError) && <div className="mb-3"><Alert variant="error">{error || imageError}</Alert></div>}
         <label className="sr-only" htmlFor="post-content">Your post</label>
-        <textarea ref={textareaRef} id="post-content" value={content} onChange={(event) => setContent(event.target.value)} maxLength={5000} rows={variant === 'feed' ? 2 : 3} placeholder={t('postPlaceholder')} className={`w-full resize-y text-sm leading-6 text-ink outline-none placeholder:text-muted/70 focus:ring-0 ${variant === 'feed' ? 'min-h-20 border-0 bg-transparent px-0 py-2' : 'rounded-xl border border-line bg-surface/80 px-4 py-3 focus:border-brand focus:ring-2 focus:ring-brand/20'}`} />
+        <textarea ref={textareaRef} id="post-content" value={content} onChange={(event) => setContent(event.target.value)} maxLength={500} rows={variant === 'feed' ? 2 : 3} placeholder={t('postPlaceholder')} className={`w-full resize-y text-sm leading-6 text-ink outline-none placeholder:text-muted/70 focus:ring-0 ${variant === 'feed' ? 'min-h-20 border-0 bg-transparent px-0 py-2' : 'rounded-xl border border-line bg-surface/80 px-4 py-3 focus:border-brand focus:ring-2 focus:ring-brand/20'}`} />
 
         <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={(event) => chooseImage(event.target.files?.[0])} aria-label={russian ? 'Выбрать фото' : 'Choose a photo'} />
         {imagePreview && <div className="relative mt-2 inline-block"><img src={imagePreview} alt={russian ? 'Предпросмотр фото' : 'Photo preview'} className="max-h-56 max-w-full rounded-2xl border border-line object-cover" /><button type="button" onClick={() => { setImage(undefined); setImagePreview(''); if (fileRef.current) fileRef.current.value = ''; }} aria-label={russian ? 'Удалить фото' : 'Remove photo'} className="absolute right-2 top-2 rounded-full bg-black/70 p-1.5 text-white hover:bg-black"><X size={15} /></button></div>}
@@ -113,7 +113,7 @@ export default function PostComposer({ user, submitting, error, onSubmit, varian
               </span>
             </button>
           </div>
-          <div className="flex items-center justify-end gap-3"><span className="text-xs text-muted">{content.length}/5000</span><Button type="submit" loading={submitting} disabled={!content.trim() && !image} className="!w-auto">{submitting ? t('publishing') : <>{t('publish')} <Send size={15} /></>}</Button></div>
+          <div className="flex items-center justify-end gap-3"><span className="text-xs text-muted">{content.length}/500</span><Button type="submit" loading={submitting} disabled={!content.trim() && !image} className="!w-auto">{submitting ? t('publishing') : <>{t('publish')} <Send size={15} /></>}</Button></div>
         </div>
 
         {linkOpen && <div className="mt-3 flex items-center gap-2 rounded-xl border border-line bg-surface/60 p-2.5"><LinkIcon size={16} className="shrink-0 text-brand" /><input type="url" value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} placeholder={russian ? 'Вставь ссылку https://…' : 'Paste a link https://…'} className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted" /><button type="button" onClick={() => { setLinkUrl(''); setLinkOpen(false); }} aria-label={russian ? 'Убрать ссылку' : 'Remove link'} className="rounded-md p-1 text-muted hover:bg-card hover:text-ink"><X size={15} /></button></div>}
