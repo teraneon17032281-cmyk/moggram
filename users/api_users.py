@@ -1,7 +1,10 @@
 """Профили, поиск людей, подписки."""
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
+from django.utils import timezone
 
 from core import throttle
 from core.http import ApiError, api_view, as_str, get_data, json_response
@@ -12,6 +15,8 @@ from notifications.models import Notification
 
 from . import services
 from .models import BlockedUser, Follow, User
+
+USERNAME_COOLDOWN_DAYS = 7
 
 
 def public_users():
@@ -96,11 +101,26 @@ def me_profile(request):
     if not 2 <= len(full_name) <= 60:
         errors["full_name"] = ["Введите имя от 2 до 60 символов."]
 
-    username = as_str(data.get("username", user.username), 50)
-    if username != user.username:  # не трогаем ник, если он не менялся (у старых аккаунтов он мог быть «нестандартным»)
-        problem = services.username_problem(username, exclude_pk=user.pk)
-        if problem:
-            errors["username"] = [problem]
+    username = as_str(data.get("username", user.username), 50).lstrip("@")
+    username_changed = username != user.username
+    if username_changed:  # не трогаем ник, если он не менялся (у старых аккаунтов он мог быть «нестандартным»)
+        now = timezone.now()
+        if user.username_changed_at:
+            next_allowed = user.username_changed_at + timedelta(days=USERNAME_COOLDOWN_DAYS)
+            if now < next_allowed:
+                remaining = next_allowed - now
+                days_left = remaining.days
+                hours_left = max(1, remaining.seconds // 3600) if days_left == 0 else remaining.seconds // 3600
+                if days_left > 0:
+                    wait_str = f"{days_left} дн. {hours_left} ч."
+                else:
+                    wait_str = f"{hours_left} ч."
+                errors["username"] = [f"Менять имя пользователя можно раз в 7 дней. Подождите ещё {wait_str}"]
+
+        if "username" not in errors:
+            problem = services.username_problem(username, exclude_pk=user.pk)
+            if problem:
+                errors["username"] = [problem]
 
     bio = as_str(data.get("bio", user.bio), 1000)
     if len(bio) > 500:
@@ -119,6 +139,9 @@ def me_profile(request):
 
     old_avatar = user.avatar.name if user.avatar else None
     user.full_name, user.username, user.bio = full_name, username, bio
+    if username_changed:
+        user.username_changed_at = timezone.now()
+
     if avatar:
         from uuid import uuid4
 
