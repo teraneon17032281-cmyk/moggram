@@ -20,7 +20,6 @@ export default function HomePage() {
   const [sort, setSort] = useState<'new' | 'popular' | 'random'>('new');
   const [newPostsAvailable, setNewPostsAvailable] = useState(false);
   const postsRef = useRef<Post[]>([]);
-  const feedScrollRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [feedError, setFeedError] = useState('');
@@ -37,7 +36,6 @@ export default function HomePage() {
 
   useEffect(() => { postsRef.current = posts; }, [posts]);
   useEffect(() => { void loadFeed(); }, [loadFeed]);
-  useEffect(() => { feedScrollRef.current?.scrollTo({ top: 0 }); }, [sort]);
   useEffect(() => {
     if (sort !== 'new') { setNewPostsAvailable(false); return; }
     const checkForNewPosts = async () => {
@@ -63,21 +61,19 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-hidden lg:pl-60">
+    <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-60">
       <AppHeader />
-      <main className="mx-auto grid h-[calc(100dvh-3.5rem-62px-env(safe-area-inset-bottom))] min-h-0 max-w-[1440px] grid-cols-1 grid-rows-[minmax(0,1fr)] gap-0 px-0 sm:px-5 lg:h-[100dvh] 2xl:grid-cols-[minmax(0,760px)_280px] 2xl:gap-10">
-        <section className="flex min-h-0 min-w-0 flex-col border-line lg:border-x" aria-label="Community feed">
-          <div className="z-10 flex h-[68px] shrink-0 items-center justify-between border-b border-line bg-bg px-5">
+      <main className="mx-auto grid max-w-[1440px] grid-cols-1 gap-0 px-0 sm:px-5 2xl:grid-cols-[minmax(0,760px)_280px] 2xl:gap-10">
+        <section className="min-w-0 border-line lg:border-x" aria-label="Community feed">
+          <div className="sticky top-14 z-10 flex h-[68px] items-center justify-between border-b border-line bg-bg px-5 lg:top-0">
             <div><h1 className="font-display text-lg font-bold tracking-tight text-ink">{t('feed')}</h1><p className="hidden text-[11px] text-muted sm:block">{t('community')} <span className="mx-1 text-brand/70">·</span> IUCA</p></div>
             <Link to="/search" className="hidden items-center gap-2 rounded-full border border-line bg-card px-3 py-2 text-xs text-muted transition hover:border-brand/30 hover:text-ink md:flex"><Search size={16} /><span>{t('searchPeople')} · @iuca.kg</span></Link>
           </div>
-          <div className="shrink-0 border-b border-line bg-bg px-4 sm:px-5"><PostComposer user={user} submitting={submitting} error={postError} onSubmit={publish} variant="feed" /></div>
-          {newPostsAvailable && sort === 'new' && <div className="flex shrink-0 justify-center border-b border-line py-2"><button type="button" onClick={() => { setNewPostsAvailable(false); void loadFeed(); feedScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }} className="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand/20">{t('newPosts')}</button></div>}
-          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-3 py-3 sm:px-5"><div role="tablist" aria-label={t('feedSort')} className="flex min-w-0 gap-1 overflow-x-auto">{(['new', 'popular', 'random'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={sort === value} onClick={() => setSort(value)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition sm:px-4 ${sort === value ? 'bg-brand text-white shadow-md shadow-brand/20' : 'text-muted hover:bg-card hover:text-ink'}`}>{t(value === 'new' ? 'feedNew' : value === 'popular' ? 'feedPopular' : 'feedRandom')}</button>)}</div><button onClick={() => void loadFeed()} aria-label={t('refresh')} title={t('refresh')} className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted hover:bg-card hover:text-ink" type="button"><RefreshCw size={15} /><span className="hidden sm:inline">{t('refresh')}</span></button></div>
-          <div ref={feedScrollRef} className="min-h-0 flex-1 overscroll-contain overflow-y-auto">
-            {feedError && <div className="px-5 pt-4"><Alert variant="error">{feedError}</Alert></div>}
-            {loading ? <div className="px-5 py-12 text-center text-sm text-muted" role="status">{t('loadingFeed')}</div> : feedError ? <div className="px-5 py-10 text-center"><p className="text-sm text-muted">{t('feedUnavailable')}</p><Button variant="secondary" onClick={() => void loadFeed()} className="mx-auto mt-4 !w-auto">{t('tryAgain')}</Button></div> : posts.length === 0 ? <div className="px-5 py-12 text-center"><p className="font-medium">{t('quietFeed')}</p><p className="mt-1 text-sm text-muted">{t('firstPost')}</p></div> : <div>{posts.map((post) => <PostCard key={post.id} post={post} variant="desktop-feed" />)}</div>}
-          </div>
+          <div className="border-b border-line bg-bg px-4 sm:px-5"><PostComposer user={user} submitting={submitting} error={postError} onSubmit={publish} variant="feed" /></div>
+          {newPostsAvailable && sort === 'new' && <div className="flex justify-center border-b border-line py-2"><button type="button" onClick={() => { setNewPostsAvailable(false); void loadFeed(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand/20">{t('newPosts')}</button></div>}
+          <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-3 sm:px-5"><div role="tablist" aria-label={t('feedSort')} className="flex min-w-0 gap-1 overflow-x-auto">{(['new', 'popular', 'random'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={sort === value} onClick={() => setSort(value)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition sm:px-4 ${sort === value ? 'bg-brand text-white shadow-md shadow-brand/20' : 'text-muted hover:bg-card hover:text-ink'}`}>{t(value === 'new' ? 'feedNew' : value === 'popular' ? 'feedPopular' : 'feedRandom')}</button>)}</div><button onClick={() => void loadFeed()} aria-label={t('refresh')} title={t('refresh')} className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted hover:bg-card hover:text-ink" type="button"><RefreshCw size={15} /><span className="hidden sm:inline">{t('refresh')}</span></button></div>
+          {feedError && <div className="px-5 pt-4"><Alert variant="error">{feedError}</Alert></div>}
+          {loading ? <div className="px-5 py-12 text-center text-sm text-muted" role="status">{t('loadingFeed')}</div> : feedError ? <div className="px-5 py-10 text-center"><p className="text-sm text-muted">{t('feedUnavailable')}</p><Button variant="secondary" onClick={() => void loadFeed()} className="mx-auto mt-4 !w-auto">{t('tryAgain')}</Button></div> : posts.length === 0 ? <div className="px-5 py-12 text-center"><p className="font-medium">{t('quietFeed')}</p><p className="mt-1 text-sm text-muted">{t('firstPost')}</p></div> : <div>{posts.map((post) => <PostCard key={post.id} post={post} variant="desktop-feed" />)}</div>}
         </section>
         <aside className="hidden space-y-4 py-5 2xl:block">
           <section className="glass-panel rounded-2xl p-4"><div className="mb-3 flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-brand" /><h2 className="text-sm font-bold tracking-tight">{t('topics')}</h2></div><p className="mt-1 text-xs leading-5 text-muted">{t('topicsHint')}</p><div className="mt-4 flex flex-wrap gap-2">{topics.map((topic) => <span key={topic} className="rounded-full border border-line bg-card px-3 py-1.5 text-xs text-ink transition hover:border-brand/30 hover:bg-brand/10">{topic}</span>)}</div></section>
