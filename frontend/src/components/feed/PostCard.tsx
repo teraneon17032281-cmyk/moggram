@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BadgeCheck,
+  GraduationCap,
   Heart,
   Link as LinkIcon,
   MessageCircle,
@@ -262,13 +263,8 @@ export default function PostCard({
                 <span className="truncate text-sm font-semibold text-ink hover:text-brand">
                   {displayName}
                 </span>
-                {post.author?.isVerified && (
-                  <BadgeCheck
-                    size={15}
-                    className="shrink-0 text-brand"
-                    aria-label="Verified account"
-                  />
-                )}
+                {post.author?.isVerified && <BadgeCheck size={15} className="shrink-0 text-brand" aria-label="Verified account" />}
+                {post.author?.isTeacher && <GraduationCap size={16} className="shrink-0 text-emerald-400" aria-label={language === 'ru' ? 'Преподаватель' : 'Teacher'} title={language === 'ru' ? 'Преподаватель' : 'Teacher'} />}
                 <span className="truncate text-xs text-muted">
                   @{post.author!.username}
                 </span>
@@ -278,13 +274,8 @@ export default function PostCard({
                 <p className="truncate text-sm font-semibold text-ink">
                   {displayName}
                 </p>
-                {!anonymous && post.author?.isVerified && (
-                  <BadgeCheck
-                    size={15}
-                    className="shrink-0 text-brand"
-                    aria-label="Verified account"
-                  />
-                )}
+                {!anonymous && post.author?.isVerified && <BadgeCheck size={15} className="shrink-0 text-brand" aria-label="Verified account" />}
+                {!anonymous && post.author?.isTeacher && <GraduationCap size={16} className="shrink-0 text-emerald-400" aria-label={language === 'ru' ? 'Преподаватель' : 'Teacher'} title={language === 'ru' ? 'Преподаватель' : 'Teacher'} />}
                 {!anonymous && (
                   <span className="truncate text-xs text-muted">
                     @{post.author!.username}
