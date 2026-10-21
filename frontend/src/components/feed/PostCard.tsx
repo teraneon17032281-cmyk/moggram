@@ -264,7 +264,7 @@ export default function PostCard({
                   {displayName}
                 </span>
                 {post.author?.isVerified && <BadgeCheck size={15} className="shrink-0 text-brand" aria-label="Verified account" />}
-                {post.author?.isTeacher && <GraduationCap size={16} className="shrink-0 text-emerald-400" aria-label={language === 'ru' ? 'Преподаватель' : 'Teacher'} title={language === 'ru' ? 'Преподаватель' : 'Teacher'} />}
+                {post.author?.isTeacher && <GraduationCap size={16} className="shrink-0 text-emerald-400" aria-label={language === 'ru' ? 'Преподаватель' : 'Teacher'} />}
                 <span className="truncate text-xs text-muted">
                   @{post.author!.username}
                 </span>
@@ -275,7 +275,7 @@ export default function PostCard({
                   {displayName}
                 </p>
                 {!anonymous && post.author?.isVerified && <BadgeCheck size={15} className="shrink-0 text-brand" aria-label="Verified account" />}
-                {!anonymous && post.author?.isTeacher && <GraduationCap size={16} className="shrink-0 text-emerald-400" aria-label={language === 'ru' ? 'Преподаватель' : 'Teacher'} title={language === 'ru' ? 'Преподаватель' : 'Teacher'} />}
+                {!anonymous && post.author?.isTeacher && <GraduationCap size={16} className="shrink-0 text-emerald-400" aria-label={language === 'ru' ? 'Преподаватель' : 'Teacher'} />}
                 {!anonymous && (
                   <span className="truncate text-xs text-muted">
                     @{post.author!.username}
