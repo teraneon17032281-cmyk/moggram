@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Check, LogOut } from 'lucide-react';
 import AppHeader from '../components/AppHeader';
 import Button from '../components/ui/Button';
 import Alert from '../components/ui/Alert';
 import { usePreferences, type Language, type Theme } from '../contexts/PreferencesContext';
+import { useAuth } from '../contexts/AuthContext';
 import { preferencesService, type NotificationPreferences } from '../services/preferencesService';
 
 const NOTICE_KEY = 'moggram.notifications';
@@ -27,6 +28,8 @@ function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange
 }
 
 export default function SettingsPage() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const { theme, language, setTheme, setLanguage, showOnlineStatus, setShowOnlineStatus, showOwnAnonymousPosts, setShowOwnAnonymousPosts, showOwnReposts, setShowOwnReposts, showOwnLikedPosts, setShowOwnLikedPosts, showOwnCommentedPosts, setShowOwnCommentedPosts, t } = usePreferences();
   const [notifications, setNotifications] = useState<NotificationPreferences>(initialNotifications);
   const [saving, setSaving] = useState(false);
@@ -50,6 +53,10 @@ export default function SettingsPage() {
   };
 
   const updateNotice = (key: keyof NotificationPreferences) => setNotifications((value) => ({ ...value, [key]: !value[key] }));
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-60">
@@ -114,6 +121,12 @@ export default function SettingsPage() {
 
         {status && <Alert variant={status === 'saved' ? 'success' : 'info'}>{status === 'saved' ? t('saved') : t('syncError')}</Alert>}
         <Button onClick={() => void save()} loading={saving}>{saving ? '…' : t('save')}</Button>
+
+        <section className="rounded-2xl border border-line bg-card p-5 sm:p-6">
+          <Button variant="secondary" onClick={() => void handleLogout()} className="!h-11 !w-full !justify-center !border-red-500/30 !text-red-400 hover:!bg-red-500/10">
+            <LogOut size={17} /><span>{language === 'ru' ? 'Выйти из аккаунта' : 'Log out'}</span>
+          </Button>
+        </section>
       </main>
     </div>
   );
