@@ -4,6 +4,7 @@ export interface User {
   email: string;
   username: string;
   isVerified?: boolean;
+  isTeacher?: boolean;
   avatarUrl?: string | null;
   followersCount?: number;
   followingCount?: number;
