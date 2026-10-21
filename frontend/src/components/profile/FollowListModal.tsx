@@ -93,7 +93,7 @@ export default function FollowListModal({
                         {person.avatarUrl ? <img src={person.avatarUrl} alt="" className="h-full w-full object-cover" /> : person.fullName.charAt(0).toUpperCase()}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-ink"><span className="truncate">{person.fullName}</span>{person.isTeacher && <GraduationCap size={15} className="shrink-0 text-emerald-400" aria-label={russian ? 'Преподаватель' : 'Teacher'} title={russian ? 'Преподаватель' : 'Teacher'} />}</span>
+                        <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-ink"><span className="truncate">{person.fullName}</span>{person.isTeacher && <GraduationCap size={15} className="shrink-0 text-emerald-400" aria-label={russian ? 'Преподаватель' : 'Teacher'} />}</span>
                         <span className="block truncate text-xs text-muted">@{person.username}</span>
                       </span>
                     </Link>
