@@ -34,6 +34,7 @@ def author_dict(request, user):
         "full_name": display_name(user),
         "username": user.username,
         "is_verified": bool(user.is_verified),
+        "is_teacher": bool(user.is_teacher),
         "avatar_url": avatar_of(request, user),
     }
 
@@ -82,6 +83,7 @@ def profile_dict(request, user, viewer, following_ids, related_ids, post_count=N
         "username": user.username,
         "avatar_url": avatar_of(request, user),
         "is_verified": bool(user.is_verified),
+        "is_teacher": bool(user.is_teacher),
         "bio": user.bio or "",
         "post_count": user.public_posts_total if post_count is None else post_count,
         "followers_count": user.followers_total,
@@ -106,6 +108,7 @@ def session_user_dict(request, user):
         "email": user.email,
         "username": user.username,
         "is_verified": bool(user.is_verified),
+        "is_teacher": bool(user.is_teacher),
         "avatar_url": avatar_of(request, user),
         "followers_count": Follow.objects.filter(following=user).count(),
         "following_count": Follow.objects.filter(follower=user).count(),
