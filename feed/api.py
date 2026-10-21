@@ -14,7 +14,7 @@ from users.api_users import get_public_user
 
 from .models import Comment, Post, Repost
 
-CONTENT_MAX = 5000
+CONTENT_MAX = 500
 COMMENT_MAX = 1000
 LINK_MAX = 500
 LIST_LIMIT = 100
