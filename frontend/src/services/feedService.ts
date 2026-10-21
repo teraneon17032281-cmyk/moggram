@@ -6,6 +6,7 @@ interface ApiAuthor {
   full_name: string;
   username: string;
   is_verified?: boolean;
+  is_teacher?: boolean;
   avatar_url?: string | null;
 }
 
@@ -50,6 +51,7 @@ function mapPost(post: ApiPost): Post {
         fullName: post.author.full_name,
         username: post.author.username,
         isVerified: post.author.is_verified === true,
+        isTeacher: post.author.is_teacher === true,
         avatarUrl: post.author.avatar_url ?? null,
       }
     : null;
@@ -83,7 +85,7 @@ function mapComment(comment: ApiComment): PostComment {
     id: String(comment.id), content: comment.content, createdAt: comment.created_at,
     author: {
       id: String(comment.author.id), fullName: comment.author.full_name, username: comment.author.username,
-      isVerified: comment.author.is_verified === true, avatarUrl: comment.author.avatar_url ?? null,
+      isVerified: comment.author.is_verified === true, isTeacher: comment.author.is_teacher === true, avatarUrl: comment.author.avatar_url ?? null,
     },
   };
 }
