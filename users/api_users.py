@@ -8,6 +8,7 @@ from core.http import ApiError, api_view, as_str, get_data, json_response
 from core.serializers import profile_dict, relation_sets, with_profile_counts
 from core.uploads import AVATAR_MAX, validate_image
 from feed.models import Post
+from notifications.models import Notification
 
 from . import services
 from .models import BlockedUser, Follow, User
@@ -145,6 +146,8 @@ def follow_toggle(request, username):
     link, created = Follow.objects.get_or_create(follower=request.user, following=target)
     if not created:
         link.delete()
+    else:
+        Notification.objects.create(recipient=target, actor=request.user, kind=Notification.Kind.FOLLOW)
     return json_response({
         "following": created,
         "followers_count": Follow.objects.filter(following=target).count(),

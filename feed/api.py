@@ -11,6 +11,7 @@ from core.http import ApiError, api_view, as_bool, as_str, get_data, json_respon
 from core.serializers import comment_dict, post_dict
 from core.uploads import POST_IMAGE_MAX, validate_image
 from users.api_users import get_public_user
+from notifications.models import Notification
 
 from .models import Comment, Post, Repost
 
@@ -162,6 +163,8 @@ def toggle_like(request, post_id):
             post.likes.add(request.user)
         else:
             post.likes.remove(request.user)
+    if liked and post.author_id != request.user.id:
+        Notification.objects.create(recipient=post.author, actor=request.user, kind=Notification.Kind.LIKE, post_id=post.pk)
     return json_response({"liked": liked, "like_count": Post.likes.through.objects.filter(post_id=post.pk).count()})
 
 
@@ -172,6 +175,8 @@ def toggle_repost(request, post_id):
         repost, created = Repost.objects.get_or_create(user=request.user, post_id=post.pk)
         if not created:
             repost.delete()
+    if created and post.author_id != request.user.id:
+        Notification.objects.create(recipient=post.author, actor=request.user, kind=Notification.Kind.REPOST, post_id=post.pk)
     return json_response({"reposted": created, "repost_count": Repost.objects.filter(post_id=post.pk).count()})
 
 
@@ -189,6 +194,8 @@ def comments(request, post_id):
     if len(content) > COMMENT_MAX:
         raise ApiError("validation_error", 400, errors={"content": [f"Не более {COMMENT_MAX} символов."]})
     comment = Comment.objects.create(post_id=post.pk, author=request.user, text=content)
+    if post.author_id != request.user.id:
+        Notification.objects.create(recipient=post.author, actor=request.user, kind=Notification.Kind.COMMENT, post_id=post.pk, comment_id=comment.pk)
     return json_response(comment_dict(request, comment), status=201)
 
 

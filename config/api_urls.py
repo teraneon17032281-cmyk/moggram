@@ -4,6 +4,7 @@ from django.urls import path
 from academic import views as academic
 from feed import api as feed
 from messaging import api as messaging
+from notifications import api as notifications
 from users import api_auth as auth
 from users import api_users as users
 
@@ -41,6 +42,10 @@ urlpatterns = [
     path("users/<str:username>/reposts/", feed.user_reposts),
     path("users/<str:username>/liked-posts/", feed.user_liked_posts),
     path("users/<str:username>/commented-posts/", feed.user_commented_posts),
+
+    # Уведомления
+    path("notifications/", notifications.list_notifications),
+    path("notifications/read/", notifications.mark_read),
 
     # Сообщения
     path("messages/", messaging.messages),

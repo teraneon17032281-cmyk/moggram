@@ -25,6 +25,7 @@ export interface ConversationSummary {
   avatarUrl?: string | null;
   isOnline?: boolean;
   lastMessage: DirectMessage;
+  unreadCount: number;
 }
 
 interface ApiConversation {
@@ -33,6 +34,7 @@ interface ApiConversation {
   avatar_url?: string | null;
   is_online?: boolean;
   last_message: ApiMessage;
+  unread_count?: number;
 }
 
 function mapMessage(message: ApiMessage): DirectMessage {
@@ -70,6 +72,7 @@ export const messageService = {
       avatarUrl: item.avatar_url ?? null,
       isOnline: item.is_online,
       lastMessage: mapMessage(item.last_message),
+      unreadCount: item.unread_count ?? 0,
     }));
   },
 

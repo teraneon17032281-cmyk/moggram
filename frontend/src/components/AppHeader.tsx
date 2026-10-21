@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Home, LogOut, Mail, Plus, Search, Settings, UserRound } from 'lucide-react';
+import { Bell, Home, LogOut, Mail, Plus, Search, Settings, UserRound } from 'lucide-react';
 import Logo from './ui/Logo';
 import Button from './ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
 import { preferencesService } from '../services/preferencesService';
+import { useNotifications } from '../contexts/NotificationsContext';
 
 const sideLink = ({ isActive }: { isActive: boolean }) => `group relative flex h-12 items-center gap-4 overflow-hidden rounded-xl px-3 text-[16px] font-semibold transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-brand/15 to-brand/5 text-ink ring-1 ring-inset ring-brand/20 shadow-[0_8px_24px_rgba(10,20,34,0.12)]' : 'text-muted hover:bg-white/[0.045] hover:text-ink'}`;
 
@@ -13,6 +14,7 @@ export default function AppHeader() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t, showOnlineStatus } = usePreferences();
+  const { unreadCount, unreadMessages } = useNotifications();
 
   useEffect(() => {
     if (!user) return;
@@ -43,7 +45,8 @@ export default function AppHeader() {
           <NavLink aria-label={t('feed')} title={t('feed')} to="/" end className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><Home size={21} strokeWidth={2.2} /></NavLink>
           <NavLink aria-label={t('searchPeople')} title={t('searchPeople')} to="/search" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><Search size={21} strokeWidth={2.2} /></NavLink>
           <Link aria-label={t('writePost')} title={t('writePost')} to="/#post-composer" className="grid h-11 w-11 place-items-center rounded-2xl bg-brand text-[#10243a] shadow-lg shadow-brand/20 transition hover:scale-105"><Plus size={23} strokeWidth={2.4} /></Link>
-          <NavLink aria-label={t('messages')} title={t('messages')} to="/messages" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><Mail size={21} strokeWidth={2.2} /></NavLink>
+          <NavLink aria-label={t('messages')} title={t('messages')} to="/messages" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><Mail size={21} strokeWidth={2.2} />{unreadMessages > 0 && <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">{unreadMessages > 99 ? "99+" : unreadMessages}</span>}</NavLink>
+          <NavLink aria-label="Notifications" title="Notifications" to="/notifications" className="relative grid h-10 w-10 place-items-center rounded-2xl text-muted"><Bell size={20} />{unreadCount > 0 && <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}</NavLink>
           <NavLink aria-label={t('profile')} title={t('profile')} to="/profile" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><UserRound size={21} strokeWidth={2.2} /></NavLink>
           <NavLink aria-label={t('settings')} title={t('settings')} to="/settings" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><Settings size={20} strokeWidth={2.2} /></NavLink>
         </div>
@@ -54,7 +57,8 @@ export default function AppHeader() {
         <nav aria-label="Main navigation" className="mt-9 space-y-1.5">
           <NavLink to="/" end className={sideLink}><Home size={23} strokeWidth={2.2} className="transition group-hover:scale-105" />{t('feed')}</NavLink>
           <NavLink to="/search" className={sideLink}><Search size={23} strokeWidth={2.2} className="transition group-hover:scale-105" />{t('searchPeople')}</NavLink>
-          <NavLink to="/messages" className={sideLink}><Mail size={23} strokeWidth={2.2} className="transition group-hover:scale-105" />{t('messages')}</NavLink>
+          <NavLink to="/messages" className={sideLink}><Mail size={23} strokeWidth={2.2} className="transition group-hover:scale-105" />{t('messages')}{unreadMessages > 0 && <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">{unreadMessages > 99 ? "99+" : unreadMessages}</span>}</NavLink>
+          <NavLink to="/notifications" className={sideLink}><Bell size={23} strokeWidth={2.2} />{t("notifications")}{unreadCount > 0 && <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}</NavLink>
           <NavLink to="/profile" className={sideLink}><UserRound size={23} strokeWidth={2.2} className="transition group-hover:scale-105" />{t('profile')}</NavLink>
           <NavLink to="/settings" className={sideLink}><Settings size={23} strokeWidth={2.2} className="transition group-hover:rotate-12" />{t('settings')}</NavLink>
           <Link to="/#post-composer" className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-[#64a9ff] px-4 text-sm font-bold text-[#10243a] shadow-lg shadow-brand/20 transition hover:-translate-y-0.5 hover:shadow-brand/30">

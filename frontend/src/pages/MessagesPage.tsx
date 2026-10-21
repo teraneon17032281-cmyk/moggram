@@ -5,6 +5,7 @@ import AppHeader from '../components/AppHeader';
 import Alert from '../components/ui/Alert';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
+import { useNotifications } from '../contexts/NotificationsContext';
 import { errorMessage } from '../services/apiClient';
 import { messageService } from '../services/messageService';
 import { userService } from '../services/userService';
@@ -17,6 +18,7 @@ export default function MessagesPage() {
   const recipient = (params.get('to') ?? '').replace(/^@/, '').trim();
   const { user } = useAuth();
   const { language } = usePreferences();
+  const { refresh: refreshNotifications } = useNotifications();
   const russian = language === 'ru';
   const [profile, setProfile] = useState<CampusProfile | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
@@ -52,9 +54,10 @@ export default function MessagesPage() {
     try {
       const [conversation, person] = await Promise.all([messageService.getConversation(recipient), userService.getProfile(recipient)]);
       setMessages(conversation); setProfile(person);
+      await refreshNotifications();
     } catch (err) { setError(errorMessage(err)); }
     finally { setLoading(false); }
-  }, [recipient]);
+  }, [recipient, refreshNotifications]);
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
     if (!recipient || loading) return;

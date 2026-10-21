@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "academic",
     "feed",
     "messaging",
+    "notifications",
 ]
 
 MIDDLEWARE = [

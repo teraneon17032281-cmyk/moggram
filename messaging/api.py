@@ -5,7 +5,7 @@ import unicodedata
 from uuid import uuid4
 
 from django.core.files.base import ContentFile
-from django.db.models import Case, F, IntegerField, Max, Q, When
+from django.db.models import Case, Count, F, IntegerField, Max, Q, When
 from django.utils import timezone
 
 from core import throttle
@@ -14,6 +14,7 @@ from core.serializers import avatar_of, display_name, iso, is_online, media_url,
 from core.uploads import classify_attachment
 from users.api_users import get_public_user, is_blocked_between
 from users.models import User
+from notifications.models import Notification
 
 from .models import Message, MessageReaction
 
@@ -98,11 +99,12 @@ def conversations(request):
     rows = (
         Message.objects.filter(Q(sender=me) | Q(recipient=me))
         .annotate(partner=partner).values("partner")
-        .annotate(last_id=Max("id")).order_by("-last_id")
+        .annotate(last_id=Max("id"), unread_count=Count("id", filter=Q(recipient=me, read_at__isnull=True))).order_by("-last_id")
     )[:200]
     last_ids = [row["last_id"] for row in rows]
     messages = {m.pk: m for m in message_qs().filter(pk__in=last_ids)}
 
+    unread_by_partner = {row["partner"]: row["unread_count"] for row in rows}
     partner_ids = []
     for pk in last_ids:
         m = messages[pk]
@@ -120,6 +122,7 @@ def conversations(request):
             "full_name": display_name(user),
             "avatar_url": avatar_of(request, user),
             "last_message": message_dict(request, messages[pk]),
+            "unread_count": unread_by_partner.get(partner_id, 0),
         }
         if user.pk in related:
             item["is_online"] = is_online(user)
@@ -131,9 +134,13 @@ def conversations(request):
 def messages(request):
     if request.method == "GET":
         other = get_public_user(as_str(request.GET.get("with"), 50))
-        Message.objects.filter(
+        unread = Message.objects.filter(
             conversation_filter(request.user, other), recipient=request.user, read_at__isnull=True
-        ).update(read_at=timezone.now())
+        )
+        unread_ids = list(unread.values_list("id", flat=True))
+        unread.update(read_at=timezone.now())
+        if unread_ids:
+            Notification.objects.filter(recipient=request.user, kind=Notification.Kind.MESSAGE, message_id__in=unread_ids, read_at__isnull=True).update(read_at=timezone.now())
         limit = positive_int(request.GET.get("limit"), HISTORY_LIMIT, HISTORY_LIMIT)
         items = list(message_qs().filter(conversation_filter(request.user, other)).order_by("-created_at", "-id")[:limit])
         items.reverse()
@@ -169,6 +176,7 @@ def send_message(request):
         upload.name = f"{uuid4().hex}.{ext}"
         message.attachment = upload
     message.save()
+    Notification.objects.create(recipient=recipient, actor=request.user, kind=Notification.Kind.MESSAGE, message_id=message.pk)
     return json_response(message_dict(request, message_qs().get(pk=message.pk)), status=201)
 
 
@@ -217,4 +225,5 @@ def forward_message(request, message_id):
     if not forwarded.content and not forwarded.attachment:
         raise ApiError("nothing_to_forward", 400, message="В этом сообщении нечего пересылать.")
     forwarded.save()
+    Notification.objects.create(recipient=recipient, actor=request.user, kind=Notification.Kind.MESSAGE, message_id=forwarded.pk)
     return json_response(message_dict(request, message_qs().get(pk=forwarded.pk)), status=201)
