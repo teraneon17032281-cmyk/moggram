@@ -46,6 +46,15 @@ export default function AppHeader() {
           <NavLink aria-label={t('messages')} title={t('messages')} to="/messages" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><Mail size={21} strokeWidth={2.2} /></NavLink>
           <NavLink aria-label={t('profile')} title={t('profile')} to="/profile" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><UserRound size={21} strokeWidth={2.2} /></NavLink>
           <NavLink aria-label={t('settings')} title={t('settings')} to="/settings" className={({ isActive }) => `grid h-11 w-11 place-items-center rounded-2xl transition ${isActive ? 'bg-brand/15 text-brand' : 'text-muted hover:bg-card hover:text-ink'}`}><Settings size={20} strokeWidth={2.2} /></NavLink>
+          <button
+            type="button"
+            aria-label={t('logout')}
+            title={t('logout')}
+            onClick={() => void handleLogout()}
+            className="grid h-11 w-11 place-items-center rounded-2xl text-muted transition hover:bg-red-500/10 hover:text-red-400"
+          >
+            <LogOut size={20} strokeWidth={2.2} />
+          </button>
         </div>
       </nav>
 
