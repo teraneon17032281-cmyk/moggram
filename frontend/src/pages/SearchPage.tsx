@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, MessageCircle, Search, UserRoundPlus, UserRoundCheck } from 'lucide-react';
+import { BadgeCheck, GraduationCap, MessageCircle, Search, UserRoundPlus, UserRoundCheck } from 'lucide-react';
 import AppHeader from '../components/AppHeader';
 import Alert from '../components/ui/Alert';
 import { useAuth } from '../contexts/AuthContext';
@@ -61,7 +61,7 @@ export default function SearchPage() {
           {users.map((person) => <article key={person.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-card/75 p-4 shadow-sm">
             <Link to={`/users/${encodeURIComponent(person.username)}`} className="flex min-w-0 flex-1 items-center gap-3">
               <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface text-lg font-semibold ring-2 ring-brand/15 ring-offset-2 ring-offset-card">{person.avatarUrl ? <img src={person.avatarUrl} alt="" className="h-full w-full object-cover" /> : person.fullName.charAt(0).toUpperCase()}{person.isOnline !== undefined && <span className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-card ${person.isOnline ? 'bg-emerald-400' : 'bg-slate-400'}`} />}</span>
-              <span className="min-w-0"><span className="flex items-center gap-1.5 font-semibold text-ink">{person.fullName}{person.isVerified && <BadgeCheck size={15} className="text-brand" />}</span><span className="mt-0.5 block truncate text-sm text-muted">@{person.username} · {person.followersCount} {russian ? 'подписчиков' : 'followers'}{person.isOnline === true && <span className="ml-2 inline-flex items-center gap-1.5 text-emerald-500"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{russian ? 'в сети' : 'online'}</span>}</span></span>
+              <span className="min-w-0"><span className="flex items-center gap-1.5 font-semibold text-ink">{person.fullName}{person.isVerified && <BadgeCheck size={15} className="text-brand" />}{person.isTeacher && <GraduationCap size={16} className="shrink-0 text-emerald-400" aria-label={russian ? 'Преподаватель' : 'Teacher'} title={russian ? 'Преподаватель' : 'Teacher'} />}</span><span className="mt-0.5 block truncate text-sm text-muted">@{person.username} · {person.followersCount} {russian ? 'подписчиков' : 'followers'}{person.isOnline === true && <span className="ml-2 inline-flex items-center gap-1.5 text-emerald-500"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{russian ? 'в сети' : 'online'}</span>}</span></span>
             </Link>
             <div className="flex gap-2">
               <button type="button" onClick={() => void toggleFollow(person)} disabled={workingUser === person.username} className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition ${person.isFollowing ? 'border-line bg-surface/50 text-ink hover:border-rose-300/40' : 'border-brand/25 bg-brand/10 text-brand hover:bg-brand/15'} disabled:opacity-50`}>{person.isFollowing ? <UserRoundCheck size={15} /> : <UserRoundPlus size={15} />}{person.isFollowing ? (russian ? 'Вы подписаны' : 'Following') : (russian ? 'Подписаться' : 'Follow')}</button>
