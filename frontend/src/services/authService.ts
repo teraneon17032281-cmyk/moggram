@@ -14,6 +14,7 @@ interface ApiUser {
   email: string;
   username: string;
   is_verified?: boolean;
+  is_teacher?: boolean;
   avatar_url?: string | null;
   followers_count?: number;
   following_count?: number;
@@ -32,7 +33,7 @@ export interface CodeDelivery {
   resendAfter: number; // seconds until the next resend is allowed
 }
 
-const toUser = (u: ApiUser): User => ({ id: String(u.id), fullName: u.full_name, email: u.email, username: u.username, isVerified: u.is_verified === true, avatarUrl: u.avatar_url ?? null, followersCount: u.followers_count ?? 0, followingCount: u.following_count ?? 0 });
+const toUser = (u: ApiUser): User => ({ id: String(u.id), fullName: u.full_name, email: u.email, username: u.username, isVerified: u.is_verified === true, isTeacher: u.is_teacher === true, avatarUrl: u.avatar_url ?? null, followersCount: u.followers_count ?? 0, followingCount: u.following_count ?? 0 });
 
 /** Only a response with `code_sent: true` counts as a confirmed delivery. */
 function confirmedDelivery(data: CodeDeliveryResponse | null, fallbackEmail: string): CodeDelivery {
