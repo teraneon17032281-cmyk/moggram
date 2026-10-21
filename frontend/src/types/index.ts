@@ -5,7 +5,6 @@ export interface User {
   username: string;
   isVerified?: boolean;
   isTeacher?: boolean;
-  isTeacher?: boolean;
   avatarUrl?: string | null;
   followersCount?: number;
   followingCount?: number;
