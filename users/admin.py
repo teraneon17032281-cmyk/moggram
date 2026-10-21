@@ -5,13 +5,13 @@ from .models import User, University, Faculty, Follow, BlockedUser, EmailCode
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ("username", "email", "role", "faculty", "email_verified", "is_verified", "is_staff")
-    list_filter = UserAdmin.list_filter + ("email_verified", "is_verified", "role")
+    list_display = ("username", "email", "role", "faculty", "email_verified", "is_verified", "is_teacher", "is_staff")
+    list_filter = UserAdmin.list_filter + ("email_verified", "is_verified", "is_teacher", "role")
     search_fields = ("username", "email", "full_name")
     fieldsets = UserAdmin.fieldsets + (
         ("Дополнительная информация", {
             "fields": ("university", "faculty", "role", "full_name", "avatar", "avatar_url", "bio",
-                       "is_verified", "email_verified", "last_seen_at")
+                       "is_verified", "is_teacher", "email_verified", "last_seen_at")
         }),
         ("Настройки", {
             "classes": ("collapse",),
