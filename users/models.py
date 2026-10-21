@@ -98,6 +98,7 @@ class User(AbstractUser):
     )
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True, verbose_name="Аватар (файл)")
     last_seen_at = models.DateTimeField(null=True, blank=True, verbose_name="Последняя активность")
+    username_changed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата последней смены юзернейма")
 
     # Настройки (POST /api/auth/preferences/)
     theme = models.CharField(max_length=10, choices=[("dark", "Тёмная"), ("light", "Светлая")],
