@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Bell, Home, LogOut, Mail, Plus, Search, Settings, UserRound } from 'lucide-react';
+import { Bell, Home, LogOut, Mail, Plus, Search, Send, Settings, UserRound } from 'lucide-react';
 import Logo from './ui/Logo';
 import Button from './ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
 import { preferencesService } from '../services/preferencesService';
 import { useNotifications } from '../contexts/NotificationsContext';
+
+const SUPPORT_TELEGRAM = 'hitbox3d'; // Замени на нужный юзернейм без @, если там другой аккаунт
 
 const sideLink = ({ isActive }: { isActive: boolean }) => `group relative flex h-12 items-center gap-4 overflow-hidden rounded-xl px-3 text-[16px] font-semibold transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-brand/15 to-brand/5 text-ink ring-1 ring-inset ring-brand/20 shadow-[0_8px_24px_rgba(10,20,34,0.12)]' : 'text-muted hover:bg-white/[0.045] hover:text-ink'}`;
 
@@ -29,6 +31,7 @@ export default function AppHeader() {
       document.removeEventListener('visibilitychange', sendPresence);
     };
   }, [user?.id, showOnlineStatus]);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login', { replace: true });
@@ -68,6 +71,19 @@ export default function AppHeader() {
         </nav>
 
         <div className="mt-auto border-t border-line pt-4">
+          <a
+            href={`https://t.me/${SUPPORT_TELEGRAM}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-3 flex flex-col gap-0.5 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-2 transition hover:border-brand/30 hover:bg-white/[0.05]"
+          >
+            <span className="text-[11px] font-medium text-muted">По вопросам и поддержке:</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand">
+              <Send size={13} className="shrink-0" />
+              @{SUPPORT_TELEGRAM}
+            </span>
+          </a>
+
           {user && (
             <Link to="/profile" className="mb-3 flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.035] px-2.5 py-2.5 transition hover:border-brand/20 hover:bg-white/[0.06]">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface text-sm font-semibold text-ink ring-2 ring-brand/20 ring-offset-2 ring-offset-card" aria-hidden="true">{user.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" /> : user.fullName.charAt(0).toUpperCase()}</span>
