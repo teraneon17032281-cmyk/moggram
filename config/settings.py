@@ -156,12 +156,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"
 
 
-# --- Фронтенд на другом адресе (режим разработки: Vite на :5173) -------------------
+# --- Фронтенд и CORS / CSRF -------------------------------------------------------
+
+_PROD_DOMAIN = "https://moggram-a6a3cufkagdcf6b5.centralindia-01.azurewebsites.net"
 
 # Адрес фронтенда: используется в ссылке из письма для сброса пароля.
-FRONTEND_URL = env("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+FRONTEND_URL = env("FRONTEND_URL", _PROD_DOMAIN).rstrip("/")
 
-_DEV_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+_DEV_ORIGINS = f"http://localhost:5173,http://127.0.0.1:5173,{_PROD_DOMAIN}"
 CORS_ALLOWED_ORIGINS = env_list("FRONTEND_ORIGINS", _DEV_ORIGINS)
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
@@ -175,7 +177,6 @@ CSRF_COOKIE_SECURE = env_bool("COOKIE_SECURE", not DEBUG)
 
 
 # --- Почта ---------------------------------------------------------------------------
-
 
 EMAIL_HOST = env("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(env("EMAIL_PORT", "587"))
