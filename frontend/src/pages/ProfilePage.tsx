@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, BadgeCheck, Camera, Heart, MessageCircle, Pencil, Repeat2, Save, X } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Camera, GraduationCap, Heart, MessageCircle, Pencil, Repeat2, Save, X } from 'lucide-react';
 import AppHeader from '../components/AppHeader';
 import PostCard from '../components/feed/PostCard';
 import FollowListModal from '../components/profile/FollowListModal';
@@ -106,7 +106,7 @@ export default function ProfilePage() {
           <div className="relative flex flex-wrap items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-surface text-lg font-semibold ring-2 ring-brand/20" aria-hidden="true">{profileAvatar || user.avatarUrl ? <img src={profileAvatar || user.avatarUrl || ''} alt="" className="h-full w-full object-cover" /> : user.fullName.charAt(0).toUpperCase()}</div>
             <div className="min-w-0 flex-1">
-              <h1 className="flex min-w-0 flex-wrap items-center gap-x-2 font-display text-2xl font-bold tracking-tight"><span className="break-words">{user.fullName}</span>{user.isVerified && <BadgeCheck size={19} className="shrink-0 text-brand" />}</h1>
+              <h1 className="flex min-w-0 flex-wrap items-center gap-x-2 font-display text-2xl font-bold tracking-tight"><span className="break-words">{user.fullName}</span>{user.isVerified && <BadgeCheck size={19} className="shrink-0 text-brand" />}{user.isTeacher && <GraduationCap size={20} className="shrink-0 text-emerald-400" aria-label={language === 'ru' ? 'Преподаватель' : 'Teacher'} title={language === 'ru' ? 'Преподаватель' : 'Teacher'} />}</h1>
               <p className="text-sm text-muted">@{user.username}</p>
             </div>
             <div className="flex gap-2"><button type="button" onClick={startEditing} className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card/70 px-3 text-xs font-semibold text-muted transition hover:border-brand/30 hover:text-brand"><Pencil size={14} />{language === 'ru' ? 'Редактировать' : 'Edit profile'}</button><Link to="/messages" className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card/70 px-3 text-xs font-semibold text-muted transition hover:border-brand/30 hover:text-brand"><MessageCircle size={15} /><span className="hidden sm:inline">{language === 'ru' ? 'Сообщения' : 'Messages'}</span></Link></div>
