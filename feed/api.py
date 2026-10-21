@@ -71,10 +71,17 @@ def feed(request):
     if request.method == "GET":
         limit = positive_int(request.GET.get("limit"), LIST_LIMIT, 200)
         qs = posts_qs(request.user)
-        before = request.GET.get("before")
-        if before and before.isdigit():
-            qs = qs.filter(pk__lt=int(before))
-        return results(request, qs.order_by("-created_at", "-id")[:limit])
+        sort = request.GET.get("sort", "new")
+        if sort == "popular":
+            qs = qs.order_by("-like_count", "-comment_count", "-repost_count", "-created_at", "-id")
+        elif sort == "random":
+            qs = qs.order_by("?")
+        else:
+            before = request.GET.get("before")
+            if before and before.isdigit():
+                qs = qs.filter(pk__lt=int(before))
+            qs = qs.order_by("-created_at", "-id")
+        return results(request, qs[:limit])
     return create_post(request)
 
 

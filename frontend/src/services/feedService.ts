@@ -95,8 +95,8 @@ function commentActivityFrom(data: { results: ApiCommentActivity[] } | ApiCommen
 }
 
 export const feedService = {
-  async getFeed(): Promise<Post[]> {
-    return listFrom(await api.get<PostListResponse | ApiPost[]>('/api/posts/'));
+  async getFeed(sort: 'new' | 'popular' | 'random' = 'new'): Promise<Post[]> {
+    return listFrom(await api.get<PostListResponse | ApiPost[]>(`/api/posts/?sort=${sort}`));
   },
 
   async getMyPosts(): Promise<Post[]> {

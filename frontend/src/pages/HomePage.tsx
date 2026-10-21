@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, RefreshCw, Search } from 'lucide-react';
 import AppHeader from '../components/AppHeader';
@@ -17,6 +17,9 @@ const topics = ['#Учёба', '#Экзамены', '#Студенты', '#Со�
 export default function HomePage() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [sort, setSort] = useState<'new' | 'popular' | 'random'>('new');
+  const [newPostsAvailable, setNewPostsAvailable] = useState(false);
+  const postsRef = useRef<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [feedError, setFeedError] = useState('');
@@ -26,19 +29,33 @@ export default function HomePage() {
   const loadFeed = useCallback(async () => {
     setLoading(true);
     setFeedError('');
-    try { setPosts(await feedService.getFeed()); }
+    try { setPosts(await feedService.getFeed(sort)); }
     catch (error) { setFeedError(errorMessage(error)); }
     finally { setLoading(false); }
-  }, []);
+  }, [sort]);
 
+  useEffect(() => { postsRef.current = posts; }, [posts]);
   useEffect(() => { void loadFeed(); }, [loadFeed]);
+  useEffect(() => {
+    if (sort !== 'new') { setNewPostsAvailable(false); return; }
+    const checkForNewPosts = async () => {
+      try {
+        const latest = await feedService.getFeed('new');
+        const visibleIds = new Set(postsRef.current.map((post) => post.id));
+        if (latest.some((post) => !visibleIds.has(post.id))) setNewPostsAvailable(true);
+      } catch { /* Keep the current feed visible if a background refresh fails. */ }
+    };
+    const interval = window.setInterval(() => { void checkForNewPosts(); }, 30000);
+    return () => window.clearInterval(interval);
+  }, [sort]);
   if (!user) return null;
 
   const publish = async (content: string, anonymous: boolean, linkUrl?: string, image?: File) => {
     setPostError(''); setSubmitting(true);
     try {
       const post = await feedService.createPost(content, anonymous, linkUrl, image);
-      setPosts((current) => [post, ...current.filter((item) => item.id !== post.id)]);
+      if (sort === 'new') setPosts((current) => [post, ...current.filter((item) => item.id !== post.id)]);
+      else await loadFeed();
     } catch (error) { setPostError(errorMessage(error)); throw error; }
     finally { setSubmitting(false); }
   };
@@ -53,7 +70,8 @@ export default function HomePage() {
             <Link to="/search" className="hidden items-center gap-2 rounded-full border border-line bg-card px-3 py-2 text-xs text-muted transition hover:border-brand/30 hover:text-ink md:flex"><Search size={16} /><span>{t('searchPeople')} · @iuca.kg</span></Link>
           </div>
           <div className="border-b border-line bg-bg px-4 sm:px-5"><PostComposer user={user} submitting={submitting} error={postError} onSubmit={publish} variant="feed" /></div>
-          <div className="flex items-center justify-between border-b border-line px-5 py-3"><h2 className="text-sm font-semibold text-ink">{t('latest')}</h2><button onClick={() => void loadFeed()} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted hover:bg-card hover:text-ink" type="button"><RefreshCw size={15} /> {t('refresh')}</button></div>
+          {newPostsAvailable && sort === 'new' && <div className="flex justify-center border-b border-line py-2"><button type="button" onClick={() => { setNewPostsAvailable(false); void loadFeed(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand/20">{t('newPosts')}</button></div>}
+          <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-3 sm:px-5"><div role="tablist" aria-label={t('feedSort')} className="flex min-w-0 gap-1 overflow-x-auto">{(['new', 'popular', 'random'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={sort === value} onClick={() => setSort(value)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition sm:px-4 ${sort === value ? 'bg-brand text-white shadow-md shadow-brand/20' : 'text-muted hover:bg-card hover:text-ink'}`}>{t(value === 'new' ? 'feedNew' : value === 'popular' ? 'feedPopular' : 'feedRandom')}</button>)}</div><button onClick={() => void loadFeed()} aria-label={t('refresh')} title={t('refresh')} className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted hover:bg-card hover:text-ink" type="button"><RefreshCw size={15} /><span className="hidden sm:inline">{t('refresh')}</span></button></div>
           {feedError && <div className="px-5 pt-4"><Alert variant="error">{feedError}</Alert></div>}
           {loading ? <div className="px-5 py-12 text-center text-sm text-muted" role="status">{t('loadingFeed')}</div> : feedError ? <div className="px-5 py-10 text-center"><p className="text-sm text-muted">{t('feedUnavailable')}</p><Button variant="secondary" onClick={() => void loadFeed()} className="mx-auto mt-4 !w-auto">{t('tryAgain')}</Button></div> : posts.length === 0 ? <div className="px-5 py-12 text-center"><p className="font-medium">{t('quietFeed')}</p><p className="mt-1 text-sm text-muted">{t('firstPost')}</p></div> : <div>{posts.map((post) => <PostCard key={post.id} post={post} variant="desktop-feed" />)}</div>}
         </section>
