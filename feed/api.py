@@ -1,9 +1,10 @@
 """Лента, публикации, лайки, репосты, комментарии и публичные списки активности."""
+import logging
 from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models import Count, Exists, OuterRef, Q
 
 from core import throttle
@@ -19,6 +20,17 @@ CONTENT_MAX = 500
 COMMENT_MAX = 1000
 LINK_MAX = 500
 LIST_LIMIT = 100
+
+logger = logging.getLogger(__name__)
+
+
+def create_notification_safely(**fields):
+    """A notification storage problem must not fail an already-saved social action."""
+    try:
+        with transaction.atomic():
+            Notification.objects.create(**fields)
+    except DatabaseError:
+        logger.exception("Could not save activity notification")
 
 
 def posts_qs(viewer):
@@ -164,7 +176,7 @@ def toggle_like(request, post_id):
         else:
             post.likes.remove(request.user)
     if liked and post.author_id != request.user.id:
-        Notification.objects.create(recipient=post.author, actor=request.user, kind=Notification.Kind.LIKE, post_id=post.pk)
+        create_notification_safely(recipient=post.author, actor=request.user, kind=Notification.Kind.LIKE, post_id=post.pk)
     return json_response({"liked": liked, "like_count": Post.likes.through.objects.filter(post_id=post.pk).count()})
 
 
@@ -176,7 +188,7 @@ def toggle_repost(request, post_id):
         if not created:
             repost.delete()
     if created and post.author_id != request.user.id:
-        Notification.objects.create(recipient=post.author, actor=request.user, kind=Notification.Kind.REPOST, post_id=post.pk)
+        create_notification_safely(recipient=post.author, actor=request.user, kind=Notification.Kind.REPOST, post_id=post.pk)
     return json_response({"reposted": created, "repost_count": Repost.objects.filter(post_id=post.pk).count()})
 
 
@@ -195,7 +207,7 @@ def comments(request, post_id):
         raise ApiError("validation_error", 400, errors={"content": [f"Не более {COMMENT_MAX} символов."]})
     comment = Comment.objects.create(post_id=post.pk, author=request.user, text=content)
     if post.author_id != request.user.id:
-        Notification.objects.create(recipient=post.author, actor=request.user, kind=Notification.Kind.COMMENT, post_id=post.pk, comment_id=comment.pk)
+        create_notification_safely(recipient=post.author, actor=request.user, kind=Notification.Kind.COMMENT, post_id=post.pk, comment_id=comment.pk)
     return json_response(comment_dict(request, comment), status=201)
 
 
