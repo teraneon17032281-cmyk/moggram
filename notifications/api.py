@@ -25,10 +25,11 @@ def notification_dict(request, item):
 @api_view("GET")
 def list_notifications(request):
     user = request.user
-    items = list(
-        Notification.objects.filter(recipient=user).select_related("actor").order_by("-created_at", "-id")[:100]
-    )
-    unread_count = Notification.objects.filter(recipient=user, read_at__isnull=True).count()
+    # Direct messages have their own unread badge and do not appear in the
+    # activity notification list.
+    activity = Notification.objects.filter(recipient=user).exclude(kind=Notification.Kind.MESSAGE)
+    items = list(activity.select_related("actor").order_by("-created_at", "-id")[:100])
+    unread_count = activity.filter(read_at__isnull=True).count()
     unread_messages = Message.objects.filter(recipient=user, read_at__isnull=True).count()
     return json_response({
         "results": [notification_dict(request, item) for item in items],
@@ -40,7 +41,9 @@ def list_notifications(request):
 @api_view("POST")
 def mark_read(request):
     data = get_data(request)
-    unread = Notification.objects.filter(recipient=request.user, read_at__isnull=True)
+    unread = Notification.objects.filter(
+        recipient=request.user, read_at__isnull=True
+    ).exclude(kind=Notification.Kind.MESSAGE)
     ids = data.get("ids")
     if data.get("all") is True:
         updated = unread.update(read_at=timezone.now())
