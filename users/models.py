@@ -87,6 +87,7 @@ class User(AbstractUser):
     avatar_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Ссылка на аватар")
     bio = models.TextField(max_length=500, blank=True, verbose_name="О себе")
     is_verified = models.BooleanField(default=False, verbose_name="Верифицирован")
+    is_teacher = models.BooleanField(default=False, verbose_name="Преподаватель")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
 
     # --- поля для React-фронтенда ---
